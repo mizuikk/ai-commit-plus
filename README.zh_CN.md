@@ -50,7 +50,10 @@
 5. 点击 Source Control 标题区域中的 `AI Commit Plus` 操作按钮。
 6. 检查生成结果，确认后执行提交。
 
-如果你在不同仓库之间需要使用不同的提交语言，可以在命令面板运行 `Set Commit Language for Current Repository`。该命令只会为当前仓库写入工作区或文件夹级覆盖，不会改动全局默认设置。
+如果你在不同仓库之间需要使用不同的提交语言，可以按 `Ctrl+Shift+P` 打开命令面板（macOS 使用 `Cmd+Shift+P`），然后运行 `Set Commit Language for Current Repository`。该命令只会为当前仓库写入工作区或文件夹级覆盖，不会改动全局默认设置。
+
+> **Note**\
+> 该命令会将语言选择保存为 VS Code 的工作区或文件夹级设置。在单文件夹仓库中，通常会写入 `.vscode/settings.json`；如果该文件被 Git 跟踪，你可能会在变更列表中看到它。
 
 > **Note**\
 > 如果 diff 超过当前模型的上下文窗口，请分批暂存并分别生成提交消息。

@@ -50,7 +50,10 @@ Use OpenAI / Azure OpenAI / DeepSeek / Gemini APIs to review staged Git changes,
 5. Click the `AI Commit Plus` action in the Source Control title area.
 6. Review the generated message and commit if it looks correct.
 
-If you switch between repositories that require different commit languages, run `Set Commit Language for Current Repository` from the Command Palette. It stores a workspace or folder override only for the active repository.
+If you switch between repositories that require different commit languages, press `Ctrl+Shift+P` to open the Command Palette (`Cmd+Shift+P` on macOS), then run `Set Commit Language for Current Repository`. It stores a workspace or folder override only for the active repository.
+
+> **Note**\
+> This command saves the language choice as a VS Code workspace or folder setting. In a single-folder repository, it will usually write to `.vscode/settings.json`; if that file is tracked by Git, you may see it in your changes list.
 
 > **Note**\
 > If your diff is too large for the configured model context window, stage and generate the commit in smaller batches.
