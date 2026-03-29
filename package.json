@@ -1,8 +1,8 @@
 {
-  "name": "ai-commit",
-  "displayName": "AI Commit",
-  "description": "Use Azure/OpenAI API to review Git changes, generate conventional commit messages that meet the conventions, simplify the commit process, and keep the commit conventions consistent.",
-  "version": "0.1.4",
+  "name": "ai-commit-plus",
+  "displayName": "AI Commit Plus",
+  "description": "Use OpenAI and Gemini APIs to review Git changes, generate conventional commit messages, and keep commit conventions consistent with the AI Commit Plus workflow.",
+  "version": "0.2.0",
   "engines": {
     "node": ">=24",
     "vscode": "^1.77.0"
@@ -20,37 +20,37 @@
     "Commitizen",
     "Commit Message",
     "Commit Message Generator",
-    "AI Commit",
+    "AI Commit Plus",
     "Auto Commit"
   ],
-  "publisher": "sitoi",
-  "repository": "https://github.com/sitoi/ai-commit",
+  "publisher": "mizuikk",
+  "repository": "https://github.com/mizuikk/ai-commit",
   "icon": "images/logo.png",
   "activationEvents": [
-    "onCommand:ai-commit"
+    "onCommand:extension.ai-commit-plus"
   ],
   "contributes": {
     "commands": [
       {
-        "command": "extension.ai-commit",
+        "command": "extension.ai-commit-plus",
         "icon": {
           "dark": "images/icon.svg",
           "light": "images/icon.svg"
         },
-        "title": "AI Commit"
+        "title": "AI Commit Plus"
       },
       {
-        "command": "ai-commit.showAvailableModels",
+        "command": "ai-commit-plus.showAvailableModels",
         "title": "Show Available OpenAI Models"
       },
       {
-        "command": "ai-commit.setCommitLanguageForCurrentRepository",
+        "command": "ai-commit-plus.setCommitLanguageForCurrentRepository",
         "title": "Set Commit Language for Current Repository"
       }
     ],
     "configuration": {
       "properties": {
-        "ai-commit.AI_COMMIT_LANGUAGE": {
+        "ai-commit-plus.AI_COMMIT_LANGUAGE": {
           "default": "English",
           "markdownDescription": "Default commit message language. This setting supports repository-level overrides through workspace or folder settings.",
           "scope": "resource",
@@ -98,39 +98,39 @@
           ],
           "type": "string"
         },
-        "ai-commit.AZURE_API_VERSION": {
+        "ai-commit-plus.AZURE_API_VERSION": {
           "default": "",
           "description": "AZURE API VERSION",
           "type": "string"
         },
-        "ai-commit.OPENAI_API_KEY": {
+        "ai-commit-plus.OPENAI_API_KEY": {
           "default": "",
           "description": "OpenAI API Key",
           "type": "string"
         },
-        "ai-commit.OPENAI_BASE_URL": {
+        "ai-commit-plus.OPENAI_BASE_URL": {
           "default": "",
           "description": "OpenAI BASE URL",
           "type": "string"
         },
-        "ai-commit.OPENAI_MODEL": {
+        "ai-commit-plus.OPENAI_MODEL": {
           "default": "gpt-4o",
           "description": "OpenAI MODEL, you can select a model from the list by running the 'Show Available OpenAI Models' command",
           "type": "string"
         },
-        "ai-commit.AI_COMMIT_SYSTEM_PROMPT": {
+        "ai-commit-plus.AI_COMMIT_SYSTEM_PROMPT": {
           "type": "string",
           "default": "",
           "description": "Custom system prompt for generating commit messages"
         },
-        "ai-commit.OPENAI_TEMPERATURE": {
+        "ai-commit-plus.OPENAI_TEMPERATURE": {
           "type": "number",
           "default": 0.7,
           "minimum": 0,
           "maximum": 2,
           "description": "OpenAI temperature setting (0-2). Higher values make output more random, lower values more deterministic."
         },
-        "ai-commit.AI_PROVIDER": {
+        "ai-commit-plus.AI_PROVIDER": {
           "type": "string",
           "default": "openai",
           "description": "AI Provider to use (OpenAI or Gemini)",
@@ -139,17 +139,17 @@
             "gemini"
           ]
         },
-        "ai-commit.GEMINI_API_KEY": {
+        "ai-commit-plus.GEMINI_API_KEY": {
           "type": "string",
           "default": "",
           "description": "Gemini API Key"
         },
-        "ai-commit.GEMINI_MODEL": {
+        "ai-commit-plus.GEMINI_MODEL": {
           "type": "string",
           "default": "gemini-2.0-flash-001",
           "description": "Gemini Model to use"
         },
-        "ai-commit.GEMINI_TEMPERATURE": {
+        "ai-commit-plus.GEMINI_TEMPERATURE": {
           "type": "number",
           "default": 0.7,
           "minimum": 0,
@@ -157,12 +157,12 @@
           "description": "Gemini temperature setting (0-2). Controls randomness."
         }
       },
-      "title": "AI Commit"
+      "title": "AI Commit Plus"
     },
     "menus": {
       "scm/title": [
         {
-          "command": "extension.ai-commit",
+          "command": "extension.ai-commit-plus",
           "group": "navigation"
         }
       ]

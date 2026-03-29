@@ -1,4 +1,4 @@
-name: Publish VSIX to GitHub Releases
+name: Publish AI Commit Plus VSIX to GitHub Releases
 
 on:
   push:
@@ -94,8 +94,10 @@ jobs:
             fi
           fi
 
+          package_path="$(node ./scripts/vsix.js path)"
+
           echo "current_version=$current_version" >> "$GITHUB_OUTPUT"
-          echo "package_path=artifacts/ai-commit-${current_version}.vsix" >> "$GITHUB_OUTPUT"
+          echo "package_path=$package_path" >> "$GITHUB_OUTPUT"
           echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
           echo "release_name=$release_name" >> "$GITHUB_OUTPUT"
           echo "should_release=$should_release" >> "$GITHUB_OUTPUT"

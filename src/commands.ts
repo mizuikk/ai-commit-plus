@@ -69,7 +69,7 @@ function getRepositoryLanguageState(resourceUri: vscode.Uri): {
   target: vscode.ConfigurationTarget;
 } {
   const target = getRepositoryLanguageTarget(resourceUri);
-  const config = vscode.workspace.getConfiguration('ai-commit', resourceUri);
+  const config = vscode.workspace.getConfiguration('ai-commit-plus', resourceUri);
   const inspectedLanguage = config.inspect<string>(ConfigKeys.AI_COMMIT_LANGUAGE);
   const effectiveLanguage = config.get<string>(ConfigKeys.AI_COMMIT_LANGUAGE, 'English');
 
@@ -178,7 +178,7 @@ async function setCommitLanguageForCurrentRepository(arg?: any): Promise<void> {
       resourceUri
     );
     vscode.window.showInformationMessage(
-      `AI Commit language for this repository now follows the inherited setting: ${languageState.inheritedLanguage}.`
+      `AI Commit Plus language for this repository now follows the inherited setting: ${languageState.inheritedLanguage}.`
     );
     return;
   }
@@ -195,7 +195,7 @@ async function setCommitLanguageForCurrentRepository(arg?: any): Promise<void> {
   );
 
   vscode.window.showInformationMessage(
-    `AI Commit language for this repository set to ${selection.language}.`
+    `AI Commit Plus language for this repository set to ${selection.language}.`
   );
 }
 
@@ -215,17 +215,17 @@ export class CommandManager {
    * @sideEffects Registers VS Code commands and stores their disposables.
    */
   registerCommands() {
-    this.registerCommand('extension.ai-commit', generateCommitMsg);
+    this.registerCommand('extension.ai-commit-plus', generateCommitMsg);
     this.registerCommand(
-      'ai-commit.setCommitLanguageForCurrentRepository',
+      'ai-commit-plus.setCommitLanguageForCurrentRepository',
       setCommitLanguageForCurrentRepository
     );
-    this.registerCommand('extension.configure-ai-commit', () =>
-      vscode.commands.executeCommand('workbench.action.openSettings', 'ai-commit')
+    this.registerCommand('extension.configure-ai-commit-plus', () =>
+      vscode.commands.executeCommand('workbench.action.openSettings', 'ai-commit-plus')
     );
 
     // Show available OpenAI models
-    this.registerCommand('ai-commit.showAvailableModels', async () => {
+    this.registerCommand('ai-commit-plus.showAvailableModels', async () => {
       const configManager = ConfigurationManager.getInstance();
       const models = await configManager.getAvailableOpenAIModels();
       const selected = await vscode.window.showQuickPick(models, {
@@ -233,7 +233,7 @@ export class CommandManager {
       });
       
       if (selected) {
-        const config = vscode.workspace.getConfiguration('ai-commit');
+        const config = vscode.workspace.getConfiguration('ai-commit-plus');
         await config.update('OPENAI_MODEL', selected, vscode.ConfigurationTarget.Global);
       }
     });
@@ -245,7 +245,7 @@ export class CommandManager {
      * Show available Gemini models
      */
     /*
-    this.registerCommand('ai-commit.showAvailableGeminiModels', async () => {
+    this.registerCommand('ai-commit-plus.showAvailableGeminiModels', async () => {
       const configManager = ConfigurationManager.getInstance();
       const models = await configManager.getAvailableGeminiModels(); // Use the updated function
       const selected = await vscode.window.showQuickPick(models, {
@@ -253,7 +253,7 @@ export class CommandManager {
       });
 
       if (selected) {
-        const config = vscode.workspace.getConfiguration('ai-commit');
+        const config = vscode.workspace.getConfiguration('ai-commit-plus');
         await config.update('GEMINI_MODEL', selected, vscode.ConfigurationTarget.Global);
       }
     });
@@ -285,7 +285,7 @@ export class CommandManager {
         } else if (result === 'Configure') {
           await vscode.commands.executeCommand(
             'workbench.action.openSettings',
-            'ai-commit'
+            'ai-commit-plus'
           );
         }
       }

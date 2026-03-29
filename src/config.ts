@@ -40,11 +40,11 @@ export class ConfigurationManager {
   private constructor(context: vscode.ExtensionContext) {
     this.context = context;
     this.disposable = vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration('ai-commit')) {
+      if (event.affectsConfiguration('ai-commit-plus')) {
         this.configCache.clear();
 
-        if (event.affectsConfiguration('ai-commit.OPENAI_BASE_URL') ||
-          event.affectsConfiguration('ai-commit.OPENAI_API_KEY')) {
+        if (event.affectsConfiguration('ai-commit-plus.OPENAI_BASE_URL') ||
+          event.affectsConfiguration('ai-commit-plus.OPENAI_API_KEY')) {
           this.updateOpenAIModelList();
         }
       }
@@ -84,8 +84,8 @@ export class ConfigurationManager {
 
     if (!this.configCache.has(cacheKey)) {
       const config = resourceUri
-        ? vscode.workspace.getConfiguration('ai-commit', resourceUri)
-        : vscode.workspace.getConfiguration('ai-commit');
+        ? vscode.workspace.getConfiguration('ai-commit-plus', resourceUri)
+        : vscode.workspace.getConfiguration('ai-commit-plus');
       this.configCache.set(cacheKey, config.get<T>(key, defaultValue));
     }
     return this.configCache.get(cacheKey);
@@ -109,8 +109,8 @@ export class ConfigurationManager {
     resourceUri?: vscode.Uri
   ): Promise<void> {
     const config = resourceUri
-      ? vscode.workspace.getConfiguration('ai-commit', resourceUri)
-      : vscode.workspace.getConfiguration('ai-commit');
+      ? vscode.workspace.getConfiguration('ai-commit-plus', resourceUri)
+      : vscode.workspace.getConfiguration('ai-commit-plus');
 
     await config.update(key, value, target);
     this.configCache.clear();
@@ -132,7 +132,7 @@ export class ConfigurationManager {
       await this.context.globalState.update('availableOpenAIModels', models.data.map(model => model.id));
 
       // Get the current selected model
-      const config = vscode.workspace.getConfiguration('ai-commit');
+      const config = vscode.workspace.getConfiguration('ai-commit-plus');
       const currentModel = config.get<string>('OPENAI_MODEL');
 
       // If the current selected model is not in the available list, set it to the default value
@@ -174,7 +174,7 @@ export class ConfigurationManager {
       await this.context.globalState.update('availableGeminiModels', availableModels);
 
       // Get the currently selected Gemini model
-      const config = vscode.workspace.getConfiguration('ai-commit');
+      const config = vscode.workspace.getConfiguration('ai-commit-plus');
       const currentModel = config.get<string>('GEMINI_MODEL');
 
       // If the current selected Gemini model is not in the available list, set it to a default value

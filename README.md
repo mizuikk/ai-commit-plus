@@ -2,140 +2,130 @@
 
 <div align="center">
 
-<img height="120" src="https://github.com/Sitoi/ai-commit/blob/main/images/logo.png?raw=true">
+<img height="120" src="./images/logo.png" alt="AI Commit Plus logo">
 
-<h1>AI Commit</h1>
+<h1>AI Commit Plus</h1>
 
-Use OpenAI / Azure OpenAI / DeepSeek / Gemini API to review Git changes, generate conventional commit messages that meet the conventions, simplify the commit process, and keep the commit conventions consistent.
+Use OpenAI / Azure OpenAI / DeepSeek / Gemini APIs to review staged Git changes, generate conventional commit messages, and keep commit conventions consistent across repositories.
+
+> This project is a fork of [Sitoi/ai-commit](https://github.com/Sitoi/ai-commit), with independent branding, release workflow, and repository-level language override improvements.
 
 **English** · [简体中文](./README.zh_CN.md) · [Report Bug][github-issues-link] · [Request Feature][github-issues-link]
 
-<!-- SHIELD GROUP -->
-
+[![][github-release-shield]][github-release-link]
+[![][github-downloads-shield]][github-downloads-link]
 [![][github-contributors-shield]][github-contributors-link]
-[![][github-forks-shield]][github-forks-link]
 [![][github-stars-shield]][github-stars-link]
 [![][github-issues-shield]][github-issues-link]
-[![][vscode-marketplace-shield]][vscode-marketplace-link]
-[![][total-installs-shield]][total-installs-link]
-[![][avarage-rating-shield]][avarage-rating-link]
 [![][github-license-shield]][github-license-link]
 
-![](https://github.com/sitoi/ai-commit/blob/main/aicommit.gif?raw=true)
+![](./aicommit.gif)
 
 </div>
 
-## ✨ Features
+## Features
 
-- 🤯 Support generating commit messages based on git diffs using ChatGPT / Azure API / DeepSeek / Gemini API.
-- 🗺️ Support multi-language commit messages.
-- 📁 Support repository-level language overrides for multi-project workflows.
-- 😜 Support adding Gitmoji.
-- 🛠️ Support custom system prompt.
-- 📝 Support Conventional Commits specification.
+- Generate commit messages from staged diffs with OpenAI / Azure OpenAI / DeepSeek / Gemini.
+- Support multi-language commit messages.
+- Support repository-level language overrides for multi-project workflows.
+- Support Gitmoji prompts.
+- Support custom system prompts.
+- Support Conventional Commits.
 
-## 📦 Installation
+## Installation
 
-1. Search for "AI Commit" in VSCode and click the "Install" button.
-2. Install it directly from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=Sitoi.ai-commit).
-
-> **Note**\
-> Make sure your Node.js version is 24.14.1 or later
-
-## 🤯 Usage
-
-1. Ensure that you have installed and enabled the "AI Commit" extension.
-2. In VSCode settings, locate the "ai-commit" configuration options and configure them as needed.
-3. Make changes in your project and add the changes to the staging area (git add).
-4. (Optional) If you want to provide additional context for the commit message, type it in the Source Control panel's message input box before clicking the AI Commit button.
-5. Next to the commit message input box in the "Source Control" panel, click the "AI Commit" icon button. After clicking, the extension will generate a commit message (considering any additional context if provided) and populate it in the input box.
-6. Review the generated commit message, and if you are satisfied, proceed to commit your changes.
-
-If you work across repositories that use different commit languages, run the `Set Commit Language for Current Repository` command from the Command Palette. This stores a workspace or folder override for the active repository without changing your global default.
+1. Download the latest `.vsix` asset from [GitHub Releases][github-release-link].
+2. In VS Code, run `Extensions: Install from VSIX...`.
+3. Select the downloaded `ai-commit-plus-<version>.vsix` package.
 
 > **Note**\
-> If the code exceeds the maximum token length, consider adding it to the staging area in batches.
+> Use Node.js `24.14.1` or later for local development and packaging.
 
-### ⚙️ Configuration
+## Usage
 
-> **Note** Version >= 0.0.5 Don't need to configure `EMOJI_ENABLED` and `FULL_GITMOJI_SPEC`, Default Prompt is [prompt/with_gitmoji.md](./prompt/with_gitmoji.md), If don't need to use `Gitmoji`. Please set `SYSTEM_PROMPT` to your custom prompt, please refer to [prompt/without_gitmoji.md](./prompt/without_gitmoji.md).
+1. Install and enable `AI Commit Plus`.
+2. In VS Code settings, configure the `ai-commit-plus` settings namespace.
+3. Stage the changes you want to include in the commit.
+4. Optional: enter extra context in the Source Control message box before generating the commit message.
+5. Click the `AI Commit Plus` action in the Source Control title area.
+6. Review the generated message and commit if it looks correct.
 
-In the VSCode settings, locate the "ai-commit" configuration options and configure them as needed:
+If you switch between repositories that require different commit languages, run `Set Commit Language for Current Repository` from the Command Palette. It stores a workspace or folder override only for the active repository.
 
-| Configuration      |  Type  |       Default        | Required |                                                       Notes                                                        |
-| :----------------- | :----: | :------------------: | :------: | :----------------------------------------------------------------------------------------------------------------: |
-| AI_PROVIDER        | string |        openai        |   Yes    |                                     Select AI Provider: `openai` or `gemini`.                                      |
-| OPENAI_API_KEY     | string |         None         |   Yes    |    Required when `AI Provider` is set to `OpenAI`. [OpenAI token](https://platform.openai.com/account/api-keys)    |
-| OPENAI_BASE_URL    | string |         None         |    No    |                If using Azure, use: https://{resource}.openai.azure.com/openai/deployments/{model}                 |
-| OPENAI_MODEL       | string |        gpt-4o        |   Yes    |      OpenAI MODEL, you can select a model from the list by running the `Show Available OpenAI Models` command      |
-| AZURE_API_VERSION  | string |         None         |    No    |                                                 AZURE_API_VERSION                                                  |
-| OPENAI_TEMPERATURE | number |         0.7          |    No    |      Controls randomness in the output. Range: 0-2. Lower values: more focused, Higher values: more creative       |
-| GEMINI_API_KEY     | string |         None         |   Yes    |     Required when `AI Provider` is set to `Gemini`. [Gemini API key](https://makersuite.google.com/app/apikey)     |
-| GEMINI_MODEL       | string | gemini-2.0-flash-001 |   Yes    |                       Gemini MODEL. Currently, model selection is limited to configuration.                        |
-| GEMINI_TEMPERATURE | number |         0.7          |    No    | Controls randomness in the output. Range: 0-2 for Gemini. Lower values: more focused, Higher values: more creative |
-| AI_COMMIT_LANGUAGE | string |          en          |   Yes    |                 Supports 19 languages. Can be overridden per repository via workspace or folder settings.          |
-| SYSTEM_PROMPT      | string |         None         |    No    |                                                Custom system prompt                                                |
+> **Note**\
+> If your diff is too large for the configured model context window, stage and generate the commit in smaller batches.
 
-## ⌨️ Local Development
+## Configuration
 
-You can use Github Codespaces for online development:
+> **Note**\
+> Since `0.0.5`, `EMOJI_ENABLED` and `FULL_GITMOJI_SPEC` are no longer required. The default Gitmoji prompt is [prompt/with_gitmoji.md](./prompt/with_gitmoji.md). If you do not want Gitmoji output, set `AI_COMMIT_SYSTEM_PROMPT` to your own prompt and start from [prompt/without_gitmoji.md](./prompt/without_gitmoji.md).
+
+All settings live under the `ai-commit-plus.` prefix in VS Code:
+
+| Setting | Type | Default | Required | Notes |
+| :--- | :---: | :---: | :---: | :--- |
+| `AI_PROVIDER` | string | `openai` | Yes | Supported values: `openai`, `gemini` |
+| `OPENAI_API_KEY` | string | None | Yes* | Required when `AI_PROVIDER` is `openai` |
+| `OPENAI_BASE_URL` | string | None | No | For Azure, use `https://{resource}.openai.azure.com/openai/deployments/{model}` |
+| `OPENAI_MODEL` | string | `gpt-4o` | Yes* | You can update it with `Show Available OpenAI Models` |
+| `AZURE_API_VERSION` | string | None | No | Azure OpenAI API version |
+| `OPENAI_TEMPERATURE` | number | `0.7` | No | Valid range: `0` to `2` |
+| `GEMINI_API_KEY` | string | None | Yes* | Required when `AI_PROVIDER` is `gemini` |
+| `GEMINI_MODEL` | string | `gemini-2.0-flash-001` | Yes* | Gemini model name |
+| `GEMINI_TEMPERATURE` | number | `0.7` | No | Valid range: `0` to `2` |
+| `AI_COMMIT_LANGUAGE` | string | `English` | Yes | Supports 19 languages and repository-level overrides |
+| `AI_COMMIT_SYSTEM_PROMPT` | string | None | No | Custom system prompt for commit generation |
+
+## Local Development
+
+You can develop online with GitHub Codespaces:
 
 [![][github-codespace-shield]][github-codespace-link]
 
-Alternatively, you can clone the repository and run the following commands for local development:
+Or clone the repository locally:
 
 ```bash
-$ git clone https://github.com/sitoi/ai-commit.git
-$ cd ai-commit
-$ npm install
+git clone https://github.com/mizuikk/ai-commit.git
+cd ai-commit
+npm install
 ```
 
-Open the project folder in VSCode. Press F5 to run the project. This will open a new Extension Development Host window and launch the plugin within it.
+Open the project in VS Code and press `F5` to launch an Extension Development Host.
 
-## 🤝 Contributing
+## Contributing
 
-Contributions of all types are more than welcome, if you are interested in contributing code, feel free to check out our GitHub [Issues][github-issues-link] to get stuck in to show us what you’re made of.
+Issues and pull requests are welcome. Use [GitHub Issues][github-issues-link] for bugs, feature requests, and discussion.
 
 [![][pr-welcome-shield]][pr-welcome-link]
 
-### 💗 All Thanks To Our Contributors
+### Contributors
 
 [![][github-contrib-shield]][github-contrib-link]
 
-## 🔗 Links
-
-### Credits
+## Credits
 
 - **auto-commit** - <https://github.com/lynxife/auto-commit>
 - **opencommit** - <https://github.com/di-sukharev/opencommit>
 
----
-
-## 📝 License
+## License
 
 This project is [MIT](./LICENSE) licensed.
 
-<!-- LINK GROUP -->
-
-[github-codespace-link]: https://codespaces.new/sitoi/ai-commit
-[github-codespace-shield]: https://github.com/sitoi/ai-commit/blob/main/images/codespaces.png?raw=true
-[github-contributors-link]: https://github.com/sitoi/ai-commit/graphs/contributors
-[github-contributors-shield]: https://img.shields.io/github/contributors/sitoi/ai-commit?color=c4f042&labelColor=black&style=flat-square
-[github-forks-link]: https://github.com/sitoi/ai-commit/network/members
-[github-forks-shield]: https://img.shields.io/github/forks/sitoi/ai-commit?color=8ae8ff&labelColor=black&style=flat-square
-[github-issues-link]: https://github.com/sitoi/ai-commit/issues
-[github-issues-shield]: https://img.shields.io/github/issues/sitoi/ai-commit?color=ff80eb&labelColor=black&style=flat-square
-[github-license-link]: https://github.com/sitoi/ai-commit/blob/main/LICENSE
-[github-license-shield]: https://img.shields.io/github/license/sitoi/ai-commit?color=white&labelColor=black&style=flat-square
-[github-stars-link]: https://github.com/sitoi/ai-commit/network/stargazers
-[github-stars-shield]: https://img.shields.io/github/stars/sitoi/ai-commit?color=ffcb47&labelColor=black&style=flat-square
-[pr-welcome-link]: https://github.com/sitoi/ai-commit/pulls
-[pr-welcome-shield]: https://img.shields.io/badge/🤯_pr_welcome-%E2%86%92-ffcb47?labelColor=black&style=for-the-badge
-[github-contrib-link]: https://github.com/sitoi/ai-commit/graphs/contributors
-[github-contrib-shield]: https://contrib.rocks/image?repo=sitoi%2Fai-commit
-[vscode-marketplace-link]: https://marketplace.visualstudio.com/items?itemName=Sitoi.ai-commit
-[vscode-marketplace-shield]: https://img.shields.io/vscode-marketplace/v/Sitoi.ai-commit.svg?label=vscode%20marketplace&color=blue&labelColor=black&style=flat-square
-[total-installs-link]: https://marketplace.visualstudio.com/items?itemName=Sitoi.ai-commit
-[total-installs-shield]: https://img.shields.io/vscode-marketplace/d/Sitoi.ai-commit.svg?&color=greeen&labelColor=black&style=flat-square
-[avarage-rating-link]: https://marketplace.visualstudio.com/items?itemName=Sitoi.ai-commit
-[avarage-rating-shield]: https://img.shields.io/vscode-marketplace/r/Sitoi.ai-commit.svg?&color=green&labelColor=black&style=flat-square
+[github-codespace-link]: https://codespaces.new/mizuikk/ai-commit
+[github-codespace-shield]: https://github.com/mizuikk/ai-commit/blob/main/images/codespaces.png?raw=true
+[github-contributors-link]: https://github.com/mizuikk/ai-commit/graphs/contributors
+[github-contributors-shield]: https://img.shields.io/github/contributors/mizuikk/ai-commit?color=c4f042&labelColor=black&style=flat-square
+[github-downloads-link]: https://github.com/mizuikk/ai-commit/releases
+[github-downloads-shield]: https://img.shields.io/github/downloads/mizuikk/ai-commit/total?label=downloads&labelColor=black&style=flat-square
+[github-issues-link]: https://github.com/mizuikk/ai-commit/issues
+[github-issues-shield]: https://img.shields.io/github/issues/mizuikk/ai-commit?color=ff80eb&labelColor=black&style=flat-square
+[github-license-link]: https://github.com/mizuikk/ai-commit/blob/main/LICENSE
+[github-license-shield]: https://img.shields.io/github/license/mizuikk/ai-commit?color=white&labelColor=black&style=flat-square
+[github-release-link]: https://github.com/mizuikk/ai-commit/releases
+[github-release-shield]: https://img.shields.io/github/v/release/mizuikk/ai-commit?display_name=tag&label=release&color=blue&labelColor=black&style=flat-square
+[github-stars-link]: https://github.com/mizuikk/ai-commit/stargazers
+[github-stars-shield]: https://img.shields.io/github/stars/mizuikk/ai-commit?color=ffcb47&labelColor=black&style=flat-square
+[pr-welcome-link]: https://github.com/mizuikk/ai-commit/pulls
+[pr-welcome-shield]: https://img.shields.io/badge/PRs-welcome-ffcb47?labelColor=black&style=for-the-badge
+[github-contrib-link]: https://github.com/mizuikk/ai-commit/graphs/contributors
+[github-contrib-shield]: https://contrib.rocks/image?repo=mizuikk%2Fai-commit
