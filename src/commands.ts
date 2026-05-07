@@ -466,6 +466,7 @@ async function setCommitLanguageForCurrentRepository(arg?: any): Promise<void> {
       languageState.target,
       resourceUri
     );
+    await vscode.commands.executeCommand('ai-commit-plus.refreshLanguageStatusBar');
     vscode.window.showInformationMessage(
       `AI Commit Plus language for this repository now follows the inherited setting: ${languageState.inheritedLanguage}.`
     );
@@ -482,6 +483,7 @@ async function setCommitLanguageForCurrentRepository(arg?: any): Promise<void> {
     languageState.target,
     resourceUri
   );
+  await vscode.commands.executeCommand('ai-commit-plus.refreshLanguageStatusBar');
 
   vscode.window.showInformationMessage(
     `AI Commit Plus language for this repository set to ${selection.language}.`

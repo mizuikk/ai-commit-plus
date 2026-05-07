@@ -22,6 +22,51 @@ function getActiveResourceUri(): vscode.Uri | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri;
 }
 
+function getLanguageLabel(language: string): string {
+  const labels: Record<string, string> = {
+    'Simplified Chinese': 'ZH-CN',
+    'Traditional Chinese': 'ZH-TW',
+    Japanese: 'JA',
+    Korean: 'KO',
+    Czech: 'CS',
+    German: 'DE',
+    French: 'FR',
+    Italian: 'IT',
+    Dutch: 'NL',
+    Portuguese: 'PT',
+    Vietnamese: 'VI',
+    English: 'EN',
+    Spanish: 'ES',
+    Swedish: 'SV',
+    Russian: 'RU',
+    Bahasa: 'ID',
+    Polish: 'PL',
+    Turkish: 'TR',
+    Thai: 'TH'
+  };
+
+  return labels[language] ?? language;
+}
+
+function getShortProviderLabel(providerLabel: string): string {
+  if (providerLabel === 'No profile') {
+    return providerLabel;
+  }
+
+  const parts = providerLabel.split(/[-_\s]+/).filter(Boolean);
+  const tail = parts.length > 0 ? parts[parts.length - 1] : providerLabel;
+
+  if (tail.length <= 12) {
+    return tail;
+  }
+
+  if (providerLabel.length <= 12) {
+    return providerLabel;
+  }
+
+  return `${providerLabel.slice(0, 9)}...`;
+}
+
 function createCombinedStatusBarItem(
   context: vscode.ExtensionContext,
   configManager: ConfigurationManager
@@ -36,10 +81,19 @@ function createCombinedStatusBarItem(
       'with-gitmoji',
       resourceUri
     );
+    const language = configManager.getConfig<string>(
+      ConfigKeys.AI_COMMIT_LANGUAGE,
+      'English',
+      resourceUri
+    );
 
     const providerLabel = profile?.profile.name ?? 'No profile';
-    item.text = `AI Commit: ${providerLabel} | ${getPromptPresetLabel(promptPreset)}`;
-    item.tooltip = 'Manage provider profile or prompt preset';
+    item.text = `$(hubot) ${getShortProviderLabel(providerLabel)} | ${getLanguageLabel(language)} | ${getPromptPresetLabel(promptPreset)}`;
+    item.tooltip = [
+      `Provider: ${providerLabel}`,
+      `Language: ${language}`,
+      `Prompt: ${getPromptPresetLabel(promptPreset)}`
+    ].join('\n');
     item.command = 'ai-commit-plus.openStatusBarMenu';
     item.show();
   };
@@ -51,6 +105,11 @@ function createCombinedStatusBarItem(
           label: 'Switch Provider Profile',
           description: 'Change the active AI provider profile',
           command: 'ai-commit-plus.switchProviderProfile'
+        },
+        {
+          label: 'Set Commit Language for Current Repository',
+          description: 'Change the commit message language for the active repository',
+          command: 'ai-commit-plus.setCommitLanguageForCurrentRepository'
         },
         {
           label: 'Set Prompt Preset for Current Repository',
@@ -74,6 +133,7 @@ function createCombinedStatusBarItem(
 
   context.subscriptions.push(
     vscode.commands.registerCommand('ai-commit-plus.refreshProviderStatusBar', refresh),
+    vscode.commands.registerCommand('ai-commit-plus.refreshLanguageStatusBar', refresh),
     vscode.commands.registerCommand('ai-commit-plus.refreshPromptPresetStatusBar', refresh),
     vscode.commands.registerCommand('ai-commit-plus.openStatusBarMenu', openMenu),
     vscode.window.onDidChangeActiveTextEditor(() => {
@@ -84,6 +144,7 @@ function createCombinedStatusBarItem(
     }),
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (
+        event.affectsConfiguration(`ai-commit-plus.${ConfigKeys.AI_COMMIT_LANGUAGE}`) ||
         event.affectsConfiguration(`ai-commit-plus.${ConfigKeys.PROMPT_PRESET}`) ||
         event.affectsConfiguration(`ai-commit-plus.${ConfigKeys.ACTIVE_PROVIDER_PROFILE_ID}`) ||
         event.affectsConfiguration(`ai-commit-plus.${ConfigKeys.PROVIDER_PROFILES}`)
