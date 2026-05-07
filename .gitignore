@@ -3,4 +3,5 @@ dist
 artifacts/
 node_modules
 .vscode-test/
+tmp/
 *.vsix
