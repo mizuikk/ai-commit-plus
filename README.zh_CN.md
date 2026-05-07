@@ -44,7 +44,7 @@
 ## 使用
 
 1. 安装并启用 `AI Commit Plus`。
-2. 在 VS Code 设置中配置 `ai-commit-plus` 命名空间下的选项。
+2. 在 VS Code 设置中配置 `ai-commit-plus` 命名空间下的选项，或者使用 `Manage Provider Profiles` 命令保存多个供应商配置并在它们之间切换。
 3. 将需要提交的修改加入暂存区。
 4. 如需补充上下文，可在生成提交消息前先在 Source Control 消息框中输入说明。
 5. 点击 Source Control 标题区域中的 `AI Commit Plus` 操作按钮。
@@ -67,17 +67,22 @@
 
 | 配置项 | 类型 | 默认值 | 必填 | 说明 |
 | :--- | :---: | :---: | :---: | :--- |
-| `AI_PROVIDER` | string | `openai` | 是 | 可选值：`openai`、`gemini` |
-| `OPENAI_API_KEY` | string | None | 条件必填 | 当 `AI_PROVIDER` 为 `openai` 时必须提供 |
-| `OPENAI_BASE_URL` | string | None | 否 | Azure 场景使用 `https://{resource}.openai.azure.com/openai/deployments/{model}` |
-| `OPENAI_MODEL` | string | `gpt-4o` | 条件必填 | 可通过 `Show Available OpenAI Models` 命令更新 |
-| `AZURE_API_VERSION` | string | None | 否 | Azure OpenAI API 版本 |
-| `OPENAI_TEMPERATURE` | number | `0.7` | 否 | 取值范围 `0` 到 `2` |
-| `GEMINI_API_KEY` | string | None | 条件必填 | 当 `AI_PROVIDER` 为 `gemini` 时必须提供 |
-| `GEMINI_MODEL` | string | `gemini-2.0-flash-001` | 条件必填 | Gemini 模型名称 |
-| `GEMINI_TEMPERATURE` | number | `0.7` | 否 | 取值范围 `0` 到 `2` |
+| `PROVIDER_PROFILES` | array | `[]` | 否 | 存储多个供应商配置，API Key 保存在 VS Code SecretStorage |
+| `ACTIVE_PROVIDER_PROFILE_ID` | string | None | 否 | 当前激活的 profile id，可按工作区或仓库覆盖 |
 | `AI_COMMIT_LANGUAGE` | string | `English` | 是 | 支持 19 种语言，并支持按仓库覆盖 |
 | `AI_COMMIT_SYSTEM_PROMPT` | string | None | 否 | 自定义提交消息系统提示词 |
+
+### Provider profile 工作流
+
+使用 `Manage Provider Profiles` 命令可以创建、编辑、删除或激活 profile。每个 profile 会保存：
+
+- 供应商类型
+- 显示名称
+- Base URL
+- 模型
+- Temperature
+- Azure API Version
+- 保存在 SecretStorage 中的 API Key
 
 ## 本地开发
 

@@ -44,7 +44,7 @@ Use OpenAI / Azure OpenAI / DeepSeek / Gemini APIs to review staged Git changes,
 ## Usage
 
 1. Install and enable `AI Commit Plus`.
-2. In VS Code settings, configure the `ai-commit-plus` settings namespace.
+2. In VS Code settings, configure the `ai-commit-plus` settings namespace, or use `Manage Provider Profiles` to store multiple provider profiles and switch between them.
 3. Stage the changes you want to include in the commit.
 4. Optional: enter extra context in the Source Control message box before generating the commit message.
 5. Click the `AI Commit Plus` action in the Source Control title area.
@@ -67,17 +67,22 @@ All settings live under the `ai-commit-plus.` prefix in VS Code:
 
 | Setting | Type | Default | Required | Notes |
 | :--- | :---: | :---: | :---: | :--- |
-| `AI_PROVIDER` | string | `openai` | Yes | Supported values: `openai`, `gemini` |
-| `OPENAI_API_KEY` | string | None | Yes* | Required when `AI_PROVIDER` is `openai` |
-| `OPENAI_BASE_URL` | string | None | No | For Azure, use `https://{resource}.openai.azure.com/openai/deployments/{model}` |
-| `OPENAI_MODEL` | string | `gpt-4o` | Yes* | You can update it with `Show Available OpenAI Models` |
-| `AZURE_API_VERSION` | string | None | No | Azure OpenAI API version |
-| `OPENAI_TEMPERATURE` | number | `0.7` | No | Valid range: `0` to `2` |
-| `GEMINI_API_KEY` | string | None | Yes* | Required when `AI_PROVIDER` is `gemini` |
-| `GEMINI_MODEL` | string | `gemini-2.0-flash-001` | Yes* | Gemini model name |
-| `GEMINI_TEMPERATURE` | number | `0.7` | No | Valid range: `0` to `2` |
+| `PROVIDER_PROFILES` | array | `[]` | No | Stores multiple provider profiles. API keys are saved in VS Code SecretStorage |
+| `ACTIVE_PROVIDER_PROFILE_ID` | string | None | No | Active profile id, can be overridden per workspace or repository |
 | `AI_COMMIT_LANGUAGE` | string | `English` | Yes | Supports 19 languages and repository-level overrides |
 | `AI_COMMIT_SYSTEM_PROMPT` | string | None | No | Custom system prompt for commit generation |
+
+### Provider profile workflow
+
+Use `Manage Provider Profiles` to create, edit, delete, or activate profiles. Each profile stores:
+
+- provider type
+- display name
+- base URL
+- model
+- temperature
+- Azure API version
+- API key in SecretStorage
 
 ## Local Development
 

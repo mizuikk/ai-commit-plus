@@ -1,22 +1,9 @@
 import OpenAI from 'openai';
 import { ChatCompletionMessageParam } from 'openai/resources';
-import { ConfigKeys, ConfigurationManager } from './config';
+import * as vscode from 'vscode';
+import { ConfigurationManager, ProviderProfile, ResolvedProviderProfile } from './config';
 
-/**
- * Creates and returns an OpenAI configuration object.
- * @returns {Object} - The OpenAI configuration object.
- * @throws {Error} - Throws an error if the API key is missing or empty.
- */
-function getOpenAIConfig() {
-  const configManager = ConfigurationManager.getInstance();
-  const apiKey = configManager.getConfig<string>(ConfigKeys.OPENAI_API_KEY);
-  const baseURL = configManager.getConfig<string>(ConfigKeys.OPENAI_BASE_URL);
-  const apiVersion = configManager.getConfig<string>(ConfigKeys.AZURE_API_VERSION);
-
-  if (!apiKey) {
-    throw new Error('The OPENAI_API_KEY environment variable is missing or empty.');
-  }
-
+function createOpenAIClient(profile: ProviderProfile, apiKey: string): OpenAI {
   const config: {
     apiKey: string;
     baseURL?: string;
@@ -26,40 +13,45 @@ function getOpenAIConfig() {
     apiKey
   };
 
-  if (baseURL) {
-    config.baseURL = baseURL;
-    if (apiVersion) {
-      config.defaultQuery = { 'api-version': apiVersion };
-      config.defaultHeaders = { 'api-key': apiKey };
-    }
+  if (profile.baseURL) {
+    config.baseURL = profile.baseURL;
   }
 
-  return config;
-}
+  if (profile.azureApiVersion) {
+    config.defaultQuery = { 'api-version': profile.azureApiVersion };
+    config.defaultHeaders = { 'api-key': apiKey };
+  }
 
-/**
- * Creates and returns an OpenAI API instance.
- * @returns {OpenAI} - The OpenAI API instance.
- */
-export function createOpenAIApi() {
-  const config = getOpenAIConfig();
   return new OpenAI(config);
 }
 
-/**
- * Sends a chat completion request to the OpenAI API.
- * @param {Array<Object>} messages - The messages to send to the API.
- * @returns {Promise<string>} - A promise that resolves to the API response.
- */
-export async function ChatGPTAPI(messages: ChatCompletionMessageParam[]) {
-  const openai = createOpenAIApi();
+export async function resolveOpenAIProfile(resourceUri?: vscode.Uri): Promise<ResolvedProviderProfile> {
   const configManager = ConfigurationManager.getInstance();
-  const model = configManager.getConfig<string>(ConfigKeys.OPENAI_MODEL);
-  const temperature = configManager.getConfig<number>(ConfigKeys.OPENAI_TEMPERATURE, 0.7);
+  const resolved = await configManager.getActiveProviderProfile(resourceUri);
+
+  if (resolved.profile.type !== 'openai-compatible') {
+    throw new Error(`Active profile "${resolved.profile.name}" is not an OpenAI-compatible profile`);
+  }
+
+  return resolved;
+}
+
+export async function createOpenAIApi(resourceUri?: vscode.Uri): Promise<OpenAI> {
+  const { profile, apiKey } = await resolveOpenAIProfile(resourceUri);
+  return createOpenAIClient(profile, apiKey);
+}
+
+export async function ChatGPTAPI(
+  messages: ChatCompletionMessageParam[],
+  resourceUri?: vscode.Uri
+) {
+  const openai = await createOpenAIApi(resourceUri);
+  const { profile } = await resolveOpenAIProfile(resourceUri);
+  const temperature = profile.temperature ?? 0.7;
 
   const completion = await openai.chat.completions.create({
-    model,
-    messages: messages as ChatCompletionMessageParam[],
+    model: profile.model,
+    messages,
     temperature
   });
 

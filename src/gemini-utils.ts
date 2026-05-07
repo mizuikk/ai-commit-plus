@@ -1,62 +1,58 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { ConfigKeys, ConfigurationManager } from './config';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ChatCompletionMessageParam } from 'openai/resources';
+import * as vscode from 'vscode';
+import { ConfigurationManager } from './config';
 
-/**
- * Creates and returns a Gemini API configuration object.
- * @returns {Object} - The Gemini API configuration object.
- * @throws {Error} - Throws an error if the API key is missing or empty.
- */
-function getGeminiConfig() {
-  const configManager = ConfigurationManager.getInstance();
-  const apiKey = configManager.getConfig<string>(ConfigKeys.GEMINI_API_KEY);
+function extractMessageContent(message: ChatCompletionMessageParam | { content?: unknown }): string {
+  const content = message.content;
 
-  if (!apiKey) {
-    throw new Error('The GEMINI_API_KEY environment variable is missing or empty.');
+  if (typeof content === 'string') {
+    return content;
   }
 
-  const config: {
-    apiKey: string;
-  } = {
-    apiKey
-  };
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => (typeof part === 'object' && part && 'text' in part ? String((part as { text?: unknown }).text ?? '') : ''))
+      .join('');
+  }
 
-  return config;
+  return '';
 }
 
-/**
- * Creates and returns a Gemini API instance.
- * @returns {GoogleGenerativeAI} - The Gemini API instance.
- */
-export function createGeminiAPIClient() {
-  const config = getGeminiConfig();
-  return new GoogleGenerativeAI(config.apiKey);
+async function getGeminiProfile(resourceUri?: vscode.Uri) {
+  const configManager = ConfigurationManager.getInstance();
+  const resolved = await configManager.getActiveProviderProfile(resourceUri);
+
+  if (resolved.profile.type !== 'gemini') {
+    throw new Error(`Active profile "${resolved.profile.name}" is not a Gemini profile`);
+  }
+
+  return resolved;
 }
 
-/**
- * Sends a chat completion request to the Gemini API.
- * @param {any[]} messages - The messages to send to the API.
- * @returns {Promise<string>} - A promise that resolves to the API response.
- */
-export async function GeminiAPI(messages: any[]) {
+export async function createGeminiAPIClient(resourceUri?: vscode.Uri) {
+  const { apiKey } = await getGeminiProfile(resourceUri);
+  return new GoogleGenerativeAI(apiKey);
+}
+
+export async function GeminiAPI(
+  messages: ChatCompletionMessageParam[],
+  resourceUri?: vscode.Uri
+) {
   try {
-    const gemini = createGeminiAPIClient();
-    const configManager = ConfigurationManager.getInstance();
-    const modelName = configManager.getConfig<string>(ConfigKeys.GEMINI_MODEL);
-    const temperature = configManager.getConfig<number>(ConfigKeys.GEMINI_TEMPERATURE, 0.7);
+    const gemini = await createGeminiAPIClient(resourceUri);
+    const { profile } = await getGeminiProfile(resourceUri);
+    const temperature = profile.temperature ?? 0.7;
 
-    const model = gemini.getGenerativeModel({ model: modelName });
+    const model = gemini.getGenerativeModel({ model: profile.model });
     const chat = model.startChat({
       generationConfig: {
-        temperature: temperature,
-      },
+        temperature
+      }
     });
 
-    const result = await chat.sendMessage(messages.map(msg => msg.content));
-    const response = result.response;
-    const text = response.text();
-
-    return text;
-
+    const result = await chat.sendMessage(messages.map(extractMessageContent).join('\n'));
+    return result.response.text();
   } catch (error) {
     console.error('Gemini API call failed:', error);
     throw error;
