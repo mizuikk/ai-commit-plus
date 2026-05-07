@@ -28,7 +28,7 @@
 - 支持使用 OpenAI / Azure OpenAI / DeepSeek / Gemini 根据暂存区 diff 生成提交消息
 - 支持多语言提交消息
 - 支持按仓库覆盖提交语言，适合多项目切换
-- 支持 Gitmoji 提示词
+- 支持在 Gitmoji 和非 Gitmoji 提示词预设之间切换
 - 支持自定义系统提示词
 - 支持 Conventional Commits 规范
 
@@ -52,6 +52,8 @@
 
 如果你在不同仓库之间需要使用不同的提交语言，可以按 `Ctrl+Shift+P` 打开命令面板（macOS 使用 `Cmd+Shift+P`），然后运行 `Set Commit Language for Current Repository`。该命令只会为当前仓库写入工作区或文件夹级覆盖，不会改动全局默认设置。
 
+如果你希望按仓库切换带 emoji 和不带 emoji 的提交格式，可以运行 `Set Prompt Preset for Current Repository`。该命令同样只会为当前仓库写入工作区或文件夹级覆盖。
+
 > **Note**\
 > 该命令会将语言选择保存为 VS Code 的工作区或文件夹级设置。在单文件夹仓库中，通常会写入 `.vscode/settings.json`；如果该文件被 Git 跟踪，你可能会在变更列表中看到它。
 
@@ -61,7 +63,7 @@
 ## 配置
 
 > **Note**\
-> 自 `0.0.5` 起，不再需要配置 `EMOJI_ENABLED` 和 `FULL_GITMOJI_SPEC`。默认 Gitmoji 提示词为 [prompt/with_gitmoji.md](./prompt/with_gitmoji.md)。如果不需要 Gitmoji 输出，请将 `AI_COMMIT_SYSTEM_PROMPT` 指向你的自定义提示词，并参考 [prompt/without_gitmoji.md](./prompt/without_gitmoji.md)。
+> 自 `0.0.5` 起，不再需要配置 `EMOJI_ENABLED` 和 `FULL_GITMOJI_SPEC`。默认预设为 `with-gitmoji`。如果不需要 emoji 输出，请将 `PROMPT_PRESET` 切换为 `without-gitmoji`。如果需要完全自定义，请将 `PROMPT_PRESET` 设为 `custom`，并提供 `AI_COMMIT_SYSTEM_PROMPT`。
 
 所有设置都位于 VS Code 的 `ai-commit-plus.` 前缀下：
 
@@ -70,7 +72,8 @@
 | `PROVIDER_PROFILES` | array | `[]` | 否 | 存储多个供应商配置，API Key 保存在 VS Code SecretStorage |
 | `ACTIVE_PROVIDER_PROFILE_ID` | string | None | 否 | 当前激活的 profile id，可按工作区或仓库覆盖 |
 | `AI_COMMIT_LANGUAGE` | string | `English` | 是 | 支持 19 种语言，并支持按仓库覆盖 |
-| `AI_COMMIT_SYSTEM_PROMPT` | string | None | 否 | 自定义提交消息系统提示词 |
+| `PROMPT_PRESET` | string | `with-gitmoji` | 否 | prompt 预设，可选 `with-gitmoji`、`without-gitmoji` 或 `custom`，支持按仓库覆盖 |
+| `AI_COMMIT_SYSTEM_PROMPT` | string | None | 否 | 当 `PROMPT_PRESET=custom` 时使用的自定义系统提示词，支持按仓库覆盖 |
 
 ### Provider profile 工作流
 

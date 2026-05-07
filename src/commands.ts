@@ -3,6 +3,7 @@ import { generateCommitMsg, getRepo } from './generate-commit-msg';
 import {
   ConfigKeys,
   ConfigurationManager,
+  PromptPreset,
   ProviderProfile,
   ProviderProfileType,
   getConfigurationTargetForResource
@@ -30,8 +31,31 @@ const COMMIT_LANGUAGE_OPTIONS = [
   { label: 'Thai', description: 'ไทย' }
 ] as const;
 
+const PROMPT_PRESET_OPTIONS = [
+  {
+    label: 'With Gitmoji',
+    description: 'Use emoji-prefixed commit messages',
+    promptPreset: 'with-gitmoji' as const
+  },
+  {
+    label: 'Without Gitmoji',
+    description: 'Use Conventional Commit messages without emojis',
+    promptPreset: 'without-gitmoji' as const
+  },
+  {
+    label: 'Custom',
+    description: 'Use AI_COMMIT_SYSTEM_PROMPT',
+    promptPreset: 'custom' as const
+  }
+] as const;
+
 interface CommitLanguageQuickPickItem extends vscode.QuickPickItem {
   language?: string;
+  clearsOverride?: boolean;
+}
+
+interface PromptPresetQuickPickItem extends vscode.QuickPickItem {
+  promptPreset?: PromptPreset;
   clearsOverride?: boolean;
 }
 
@@ -111,6 +135,42 @@ function getRepositoryLanguageState(resourceUri: vscode.Uri) {
   };
 }
 
+function getRepositoryPromptPresetState(resourceUri: vscode.Uri) {
+  const target = getRepositoryLanguageTarget(resourceUri);
+  const config = vscode.workspace.getConfiguration('ai-commit-plus', resourceUri);
+  const inspectedPromptPreset = config.inspect<PromptPreset>(ConfigKeys.PROMPT_PRESET);
+  const effectivePromptPreset = config.get<PromptPreset>(
+    ConfigKeys.PROMPT_PRESET,
+    'with-gitmoji'
+  );
+
+  let inheritedPromptPreset = inspectedPromptPreset?.defaultValue ?? 'with-gitmoji';
+  let overridePromptPreset: PromptPreset | undefined;
+  if (target === vscode.ConfigurationTarget.WorkspaceFolder) {
+    overridePromptPreset = inspectedPromptPreset?.workspaceFolderValue;
+    inheritedPromptPreset =
+      inspectedPromptPreset?.workspaceValue ??
+      inspectedPromptPreset?.globalValue ??
+      inspectedPromptPreset?.defaultValue ??
+      'with-gitmoji';
+  } else if (target === vscode.ConfigurationTarget.Workspace) {
+    overridePromptPreset = inspectedPromptPreset?.workspaceValue;
+    inheritedPromptPreset =
+      inspectedPromptPreset?.globalValue ??
+      inspectedPromptPreset?.defaultValue ??
+      'with-gitmoji';
+  } else {
+    overridePromptPreset = inspectedPromptPreset?.globalValue;
+  }
+
+  return {
+    effectivePromptPreset,
+    inheritedPromptPreset,
+    overridePromptPreset,
+    target
+  };
+}
+
 function createRepositoryLanguageQuickPickItems(
   effectiveLanguage: string,
   inheritedLanguage: string,
@@ -141,6 +201,52 @@ function createRepositoryLanguageQuickPickItems(
             ? 'Current effective language'
             : undefined,
       language: option.label
+    }))
+  ];
+}
+
+function getPromptPresetLabel(promptPreset: PromptPreset): string {
+  switch (promptPreset) {
+    case 'with-gitmoji':
+      return 'With Gitmoji';
+    case 'without-gitmoji':
+      return 'Without Gitmoji';
+    case 'custom':
+      return 'Custom';
+  }
+}
+
+function createRepositoryPromptPresetQuickPickItems(
+  effectivePromptPreset: PromptPreset,
+  inheritedPromptPreset: PromptPreset,
+  overridePromptPreset?: PromptPreset
+): PromptPresetQuickPickItem[] {
+  const inheritedLabel = getPromptPresetLabel(inheritedPromptPreset);
+  const clearOverrideLabel = overridePromptPreset
+    ? `Clear repository override (${inheritedLabel})`
+    : `Use inherited default (${inheritedLabel})`;
+
+  const clearOverrideDetail = overridePromptPreset
+    ? 'Remove the repository-specific prompt preset and fall back to the inherited setting.'
+    : 'No repository-specific prompt preset is stored right now.';
+
+  return [
+    {
+      label: clearOverrideLabel,
+      description: 'Reset',
+      detail: clearOverrideDetail,
+      clearsOverride: true
+    },
+    ...PROMPT_PRESET_OPTIONS.map((option) => ({
+      label: option.label,
+      description: option.description,
+      detail:
+        option.promptPreset === overridePromptPreset
+          ? 'Current repository override'
+          : option.promptPreset === effectivePromptPreset
+            ? 'Current effective preset'
+            : undefined,
+      promptPreset: option.promptPreset
     }))
   ];
 }
@@ -379,6 +485,59 @@ async function setCommitLanguageForCurrentRepository(arg?: any): Promise<void> {
 
   vscode.window.showInformationMessage(
     `AI Commit Plus language for this repository set to ${selection.language}.`
+  );
+}
+
+async function setPromptPresetForCurrentRepository(arg?: any): Promise<void> {
+  const repo = await getRepo(arg);
+  const resourceUri = repo.rootUri;
+  const configManager = ConfigurationManager.getInstance();
+  const promptPresetState = getRepositoryPromptPresetState(resourceUri);
+  const selection = await vscode.window.showQuickPick(
+    createRepositoryPromptPresetQuickPickItems(
+      promptPresetState.effectivePromptPreset,
+      promptPresetState.inheritedPromptPreset,
+      promptPresetState.overridePromptPreset
+    ),
+    {
+      placeHolder: `Select a prompt preset for ${repo.rootUri.fsPath}`
+    }
+  );
+
+  if (!selection) {
+    return;
+  }
+
+  if (selection.clearsOverride) {
+    await configManager.updateConfig<PromptPreset>(
+      ConfigKeys.PROMPT_PRESET,
+      undefined,
+      promptPresetState.target,
+      resourceUri
+    );
+    await vscode.commands.executeCommand('ai-commit-plus.refreshPromptPresetStatusBar');
+    vscode.window.showInformationMessage(
+      `AI Commit Plus prompt preset for this repository now follows the inherited setting: ${getPromptPresetLabel(
+        promptPresetState.inheritedPromptPreset
+      )}.`
+    );
+    return;
+  }
+
+  if (!selection.promptPreset) {
+    return;
+  }
+
+  await configManager.updateConfig(
+    ConfigKeys.PROMPT_PRESET,
+    selection.promptPreset,
+    promptPresetState.target,
+    resourceUri
+  );
+  await vscode.commands.executeCommand('ai-commit-plus.refreshPromptPresetStatusBar');
+
+  vscode.window.showInformationMessage(
+    `AI Commit Plus prompt preset for this repository set to ${selection.label}.`
   );
 }
 
@@ -635,6 +794,10 @@ export class CommandManager {
     this.registerCommand(
       'ai-commit-plus.setCommitLanguageForCurrentRepository',
       setCommitLanguageForCurrentRepository
+    );
+    this.registerCommand(
+      'ai-commit-plus.setPromptPresetForCurrentRepository',
+      setPromptPresetForCurrentRepository
     );
     this.registerCommand('extension.configure-ai-commit-plus', () =>
       vscode.commands.executeCommand('workbench.action.openSettings', 'ai-commit-plus')

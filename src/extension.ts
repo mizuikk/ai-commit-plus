@@ -1,25 +1,96 @@
 import * as vscode from 'vscode';
 import { CommandManager } from './commands';
-import { ConfigurationManager } from './config';
+import { ConfigKeys, ConfigurationManager, PromptPreset } from './config';
 
-function createProviderStatusBarItem(
+function getPromptPresetLabel(promptPreset: PromptPreset): string {
+  switch (promptPreset) {
+    case 'with-gitmoji':
+      return 'Gitmoji';
+    case 'without-gitmoji':
+      return 'No Emoji';
+    case 'custom':
+      return 'Custom';
+  }
+}
+
+function getActiveResourceUri(): vscode.Uri | undefined {
+  const activeEditorUri = vscode.window.activeTextEditor?.document.uri;
+  if (activeEditorUri) {
+    return vscode.workspace.getWorkspaceFolder(activeEditorUri)?.uri ?? activeEditorUri;
+  }
+
+  return vscode.workspace.workspaceFolders?.[0]?.uri;
+}
+
+function createCombinedStatusBarItem(
   context: vscode.ExtensionContext,
   configManager: ConfigurationManager
 ): vscode.StatusBarItem {
   const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 80);
 
   const refresh = async () => {
-    const profile = await configManager.getActiveProviderProfile().catch(() => undefined);
-    item.text = profile ? `AI Commit: ${profile.profile.name}` : 'AI Commit: No profile';
-    item.tooltip = 'Switch provider profile';
-    item.command = 'ai-commit-plus.switchProviderProfile';
+    const resourceUri = getActiveResourceUri();
+    const profile = await configManager.getActiveProviderProfile(resourceUri).catch(() => undefined);
+    const promptPreset = configManager.getConfig<PromptPreset>(
+      ConfigKeys.PROMPT_PRESET,
+      'with-gitmoji',
+      resourceUri
+    );
+
+    const providerLabel = profile?.profile.name ?? 'No profile';
+    item.text = `AI Commit: ${providerLabel} | ${getPromptPresetLabel(promptPreset)}`;
+    item.tooltip = 'Manage provider profile or prompt preset';
+    item.command = 'ai-commit-plus.openStatusBarMenu';
     item.show();
+  };
+
+  const openMenu = async () => {
+    const actions = await vscode.window.showQuickPick(
+      [
+        {
+          label: 'Switch Provider Profile',
+          description: 'Change the active AI provider profile',
+          command: 'ai-commit-plus.switchProviderProfile'
+        },
+        {
+          label: 'Set Prompt Preset for Current Repository',
+          description: 'Switch between Gitmoji, No Emoji, or Custom prompt presets',
+          command: 'ai-commit-plus.setPromptPresetForCurrentRepository'
+        }
+      ],
+      {
+        placeHolder: 'Select what to configure'
+      }
+    );
+
+    if (!actions) {
+      return;
+    }
+
+    await vscode.commands.executeCommand(actions.command);
   };
 
   void refresh();
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('ai-commit-plus.refreshProviderStatusBar', refresh)
+    vscode.commands.registerCommand('ai-commit-plus.refreshProviderStatusBar', refresh),
+    vscode.commands.registerCommand('ai-commit-plus.refreshPromptPresetStatusBar', refresh),
+    vscode.commands.registerCommand('ai-commit-plus.openStatusBarMenu', openMenu),
+    vscode.window.onDidChangeActiveTextEditor(() => {
+      void refresh();
+    }),
+    vscode.workspace.onDidChangeWorkspaceFolders(() => {
+      void refresh();
+    }),
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (
+        event.affectsConfiguration(`ai-commit-plus.${ConfigKeys.PROMPT_PRESET}`) ||
+        event.affectsConfiguration(`ai-commit-plus.${ConfigKeys.ACTIVE_PROVIDER_PROFILE_ID}`) ||
+        event.affectsConfiguration(`ai-commit-plus.${ConfigKeys.PROVIDER_PROFILES}`)
+      ) {
+        void refresh();
+      }
+    })
   );
 
   return item;
@@ -37,7 +108,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     const commandManager = new CommandManager(context);
     commandManager.registerCommands();
-    const statusBarItem = createProviderStatusBarItem(context, configManager);
+    const statusBarItem = createCombinedStatusBarItem(context, configManager);
 
     context.subscriptions.push({
       dispose: () => {

@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 import * as vscode from 'vscode';
 
 export type ProviderProfileType = 'openai-compatible' | 'gemini';
+export type PromptPreset = 'with-gitmoji' | 'without-gitmoji' | 'custom';
 
 export interface ProviderProfile {
   id: string;
@@ -25,6 +26,7 @@ const PROFILE_API_KEY_PREFIX = 'providerProfiles.apiKey:';
 
 export enum ConfigKeys {
   AI_COMMIT_LANGUAGE = 'AI_COMMIT_LANGUAGE',
+  PROMPT_PRESET = 'PROMPT_PRESET',
   SYSTEM_PROMPT = 'AI_COMMIT_SYSTEM_PROMPT',
   PROVIDER_PROFILES = 'PROVIDER_PROFILES',
   ACTIVE_PROVIDER_PROFILE_ID = 'ACTIVE_PROVIDER_PROFILE_ID',

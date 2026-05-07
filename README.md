@@ -28,7 +28,7 @@ Use OpenAI / Azure OpenAI / DeepSeek / Gemini APIs to review staged Git changes,
 - Generate commit messages from staged diffs with OpenAI / Azure OpenAI / DeepSeek / Gemini.
 - Support multi-language commit messages.
 - Support repository-level language overrides for multi-project workflows.
-- Support Gitmoji prompts.
+- Support switchable Gitmoji / non-Gitmoji prompt presets.
 - Support custom system prompts.
 - Support Conventional Commits.
 
@@ -52,6 +52,8 @@ Use OpenAI / Azure OpenAI / DeepSeek / Gemini APIs to review staged Git changes,
 
 If you switch between repositories that require different commit languages, press `Ctrl+Shift+P` to open the Command Palette (`Cmd+Shift+P` on macOS), then run `Set Commit Language for Current Repository`. It stores a workspace or folder override only for the active repository.
 
+If you want to switch between emoji and non-emoji commit formats per repository, run `Set Prompt Preset for Current Repository` from the Command Palette. It stores a workspace or folder override only for the active repository.
+
 > **Note**\
 > This command saves the language choice as a VS Code workspace or folder setting. In a single-folder repository, it will usually write to `.vscode/settings.json`; if that file is tracked by Git, you may see it in your changes list.
 
@@ -61,7 +63,7 @@ If you switch between repositories that require different commit languages, pres
 ## Configuration
 
 > **Note**\
-> Since `0.0.5`, `EMOJI_ENABLED` and `FULL_GITMOJI_SPEC` are no longer required. The default Gitmoji prompt is [prompt/with_gitmoji.md](./prompt/with_gitmoji.md). If you do not want Gitmoji output, set `AI_COMMIT_SYSTEM_PROMPT` to your own prompt and start from [prompt/without_gitmoji.md](./prompt/without_gitmoji.md).
+> Since `0.0.5`, `EMOJI_ENABLED` and `FULL_GITMOJI_SPEC` are no longer required. The default preset is `with-gitmoji`. To disable emojis, switch `PROMPT_PRESET` to `without-gitmoji`. To fully customize behavior, set `PROMPT_PRESET` to `custom` and provide `AI_COMMIT_SYSTEM_PROMPT`.
 
 All settings live under the `ai-commit-plus.` prefix in VS Code:
 
@@ -70,7 +72,8 @@ All settings live under the `ai-commit-plus.` prefix in VS Code:
 | `PROVIDER_PROFILES` | array | `[]` | No | Stores multiple provider profiles. API keys are saved in VS Code SecretStorage |
 | `ACTIVE_PROVIDER_PROFILE_ID` | string | None | No | Active profile id, can be overridden per workspace or repository |
 | `AI_COMMIT_LANGUAGE` | string | `English` | Yes | Supports 19 languages and repository-level overrides |
-| `AI_COMMIT_SYSTEM_PROMPT` | string | None | No | Custom system prompt for commit generation |
+| `PROMPT_PRESET` | string | `with-gitmoji` | No | Prompt preset: `with-gitmoji`, `without-gitmoji`, or `custom`; supports repository-level overrides |
+| `AI_COMMIT_SYSTEM_PROMPT` | string | None | No | Custom system prompt used when `PROMPT_PRESET=custom`; supports repository-level overrides |
 
 ### Provider profile workflow
 

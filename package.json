@@ -2,7 +2,7 @@
   "name": "ai-commit-plus",
   "displayName": "AI Commit Plus",
   "description": "Use OpenAI and Gemini APIs to review Git changes, generate conventional commit messages, and keep commit conventions consistent with the AI Commit Plus workflow.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "engines": {
     "node": ">=24",
     "vscode": "^1.77.0"
@@ -31,7 +31,8 @@
     "onCommand:ai-commit-plus.manageProviderProfiles",
     "onCommand:ai-commit-plus.switchProviderProfile",
     "onCommand:ai-commit-plus.showAvailableModels",
-    "onCommand:ai-commit-plus.setCommitLanguageForCurrentRepository"
+    "onCommand:ai-commit-plus.setCommitLanguageForCurrentRepository",
+    "onCommand:ai-commit-plus.setPromptPresetForCurrentRepository"
   ],
   "contributes": {
     "commands": [
@@ -50,6 +51,10 @@
       {
         "command": "ai-commit-plus.setCommitLanguageForCurrentRepository",
         "title": "Set Commit Language for Current Repository"
+      },
+      {
+        "command": "ai-commit-plus.setPromptPresetForCurrentRepository",
+        "title": "Set Prompt Preset for Current Repository"
       },
       {
         "command": "ai-commit-plus.manageProviderProfiles",
@@ -110,9 +115,26 @@
           ],
           "type": "string"
         },
+        "ai-commit-plus.PROMPT_PRESET": {
+          "type": "string",
+          "default": "with-gitmoji",
+          "scope": "resource",
+          "markdownDescription": "Prompt preset for commit generation. This setting supports repository-level overrides through workspace or folder settings.",
+          "enum": [
+            "with-gitmoji",
+            "without-gitmoji",
+            "custom"
+          ],
+          "enumDescriptions": [
+            "Generate emoji-prefixed Conventional Commit messages",
+            "Generate Conventional Commit messages without emojis",
+            "Use AI_COMMIT_SYSTEM_PROMPT as the full custom system prompt"
+          ]
+        },
         "ai-commit-plus.AI_COMMIT_SYSTEM_PROMPT": {
           "type": "string",
           "default": "",
+          "scope": "resource",
           "description": "Custom system prompt for generating commit messages"
         },
         "ai-commit-plus.PROVIDER_PROFILES": {
