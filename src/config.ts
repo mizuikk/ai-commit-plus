@@ -134,6 +134,10 @@ export class ConfigurationManager {
     this.disposable.dispose();
   }
 
+  asAbsolutePath(relativePath: string): string {
+    return this.context.asAbsolutePath(relativePath);
+  }
+
   getProviderProfiles(): ProviderProfile[] {
     return this.getConfig<ProviderProfile[]>(ConfigKeys.PROVIDER_PROFILES, []);
   }

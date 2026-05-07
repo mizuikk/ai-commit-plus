@@ -1,18 +1,27 @@
+import * as fs from 'fs-extra';
 import * as vscode from 'vscode';
 import { ConfigKeys, ConfigurationManager, PromptPreset } from './config';
+import { buildCommitTypeReferenceTable, getGitmojiForCommitType } from './gitmoji';
 
 const AI_COMMIT_NAMESPACE = 'ai-commit-plus';
 const DEFAULT_PROMPT_PRESET: PromptPreset = 'with-gitmoji';
+const COMMIT_PROMPT_TEMPLATE_PATH = 'prompt/commit.md';
 
-const WITH_GITMOJI_PROMPT = (language: string) => `# Git Commit Message Guide
+let commitPromptTemplateCache: string | undefined;
 
-## Role and Purpose
+async function getCommitPromptTemplate(): Promise<string> {
+  if (!commitPromptTemplateCache) {
+    const configManager = ConfigurationManager.getInstance();
+    const templatePath = configManager.asAbsolutePath(COMMIT_PROMPT_TEMPLATE_PATH);
+    commitPromptTemplateCache = await fs.readFile(templatePath, 'utf8');
+  }
 
-You will act as a git commit message generator. When receiving a git diff, you will ONLY output the commit message itself, nothing else. No explanations, no questions, no additional comments.
+  return commitPromptTemplateCache;
+}
 
-## Output Format
-
-### Single Type Changes
+function buildOutputFormat(includeGitmoji: boolean): string {
+  if (includeGitmoji) {
+    return `### Single Type Changes
 
 \`\`\`
 <emoji> <type>(<scope>): <subject>
@@ -28,87 +37,10 @@ You will act as a git commit message generator. When receiving a git diff, you w
 <emoji> <type>(<scope>): <subject>
   <body of type 2>
 ...
-\`\`\`
+\`\`\``;
+  }
 
-## Type Reference
-
-| Type     | Emoji | Description          | Example Scopes      |
-| -------- | ----- | -------------------- | ------------------- |
-| feat     | ✨    | New feature          | user, payment       |
-| fix      | 🐛    | Bug fix              | auth, data          |
-| docs     | 📝    | Documentation        | README, API         |
-| style    | 💄    | Code style           | formatting          |
-| refactor | ♻️    | Code refactoring     | utils, helpers      |
-| perf     | ⚡️   | Performance          | query, cache        |
-| test     | ✅    | Testing              | unit, e2e           |
-| build    | 📦    | Build system         | webpack, npm        |
-| ci       | 👷    | CI config            | Travis, Jenkins     |
-| chore    | 🔧    | Other changes        | scripts, config     |
-| i18n     | 🌐    | Internationalization | locale, translation |
-
-## Writing Rules
-
-### Subject Line
-
-- Scope must be in English
-- Imperative mood
-- No capitalization
-- No period at end
-- Max 50 characters
-- Must be in ${language}
-
-### Body
-
-- Bullet points with "-"
-- Max 72 chars per line
-- Explain what and why
-- Must be in ${language}
-- Use【】for different types
-
-## Critical Requirements
-
-1. Output ONLY the commit message
-2. Write ONLY in ${language}
-3. NO additional text or explanations
-4. NO questions or comments
-5. NO formatting instructions or metadata
-
-## Additional Context
-
-If provided, consider any additional context about the changes when generating the commit message. This context will be provided before the diff and should influence the final commit message while maintaining all other formatting rules.
-
-## Examples
-
-INPUT:
-
-diff --git a/src/server.ts b/src/server.ts\n index ad4db42..f3b18a9 100644\n --- a/src/server.ts\n +++ b/src/server.ts\n @@ -10,7 +10,7 @@\n import {\n initWinstonLogger();
-\n \n const app = express();
-\n -const port = 7799;
-\n +const PORT = 7799;
-\n \n app.use(express.json());
-\n \n @@ -34,6 +34,6 @@\n app.use((\_, res, next) => {\n // ROUTES\n app.use(PROTECTED_ROUTER_URL, protectedRouter);
-\n \n -app.listen(port, () => {\n - console.log(\`Server listening on port \$\{port\}\`);
-\n +app.listen(process.env.PORT || PORT, () => {\n + console.log(\`Server listening on port \$\{PORT\}\`);
-\n });
-
-OUTPUT:
-
-♻️ refactor(server): optimize server port configuration
-
-- rename port variable to uppercase (PORT) to follow constant naming convention
-- add environment variable port support for flexible deployment
-
-Remember: All output MUST be in ${language} language. You are to act as a pure commit message generator. Your response should contain NOTHING but the commit message itself.`;
-
-const WITHOUT_GITMOJI_PROMPT = (language: string) => `# Git Commit Message Guide
-
-## Role and Purpose
-
-You will act as a git commit message generator. When receiving a git diff, you will ONLY output the commit message itself, nothing else. No explanations, no questions, no additional comments.
-
-## Output Format
-
-### Single Type Changes
+  return `### Single Type Changes
 
 \`\`\`
 <type>(<scope>): <subject>
@@ -124,77 +56,46 @@ You will act as a git commit message generator. When receiving a git diff, you w
 <type>(<scope>): <subject>
   <body of type 2>
 ...
-\`\`\`
+\`\`\``;
+}
 
-## Type Reference
+function buildGitmojiRules(includeGitmoji: boolean): string {
+  return includeGitmoji
+    ? `### Gitmoji
 
-| Type     | Description          | Example Scopes      |
-| -------- | -------------------- | ------------------- |
-| feat     | New feature          | user, payment       |
-| fix      | Bug fix              | auth, data          |
-| docs     | Documentation        | README, API         |
-| style    | Code style           | formatting          |
-| refactor | Code refactoring     | utils, helpers      |
-| perf     | Performance          | query, cache        |
-| test     | Testing              | unit, e2e           |
-| build    | Build system         | webpack, npm        |
-| ci       | CI config            | Travis, Jenkins     |
-| chore    | Other changes        | scripts, config     |
-| i18n     | Internationalization | locale, translation |
+- Prefix every subject line with the emoji that matches the selected type
+- Choose emojis only from the Type Reference table
+- Do not output Gitmoji shortcodes such as ":bug:"`
+    : '';
+}
 
-## Writing Rules
+function buildExample(language: string, includeGitmoji: boolean): string {
+  const exampleHeader = includeGitmoji
+    ? `${getGitmojiForCommitType('refactor')} refactor(server): <subject in ${language}>`
+    : `refactor(server): <subject in ${language}>`;
 
-### Subject Line
+  return `\`\`\`
+${exampleHeader}
 
-- Scope must be in English
-- Imperative mood
-- No capitalization
-- No period at end
-- Max 50 characters
-- Must be in ${language}
+- <body bullet in ${language}>
+- <body bullet in ${language}>
+\`\`\``;
+}
 
-### Body
+async function buildCommitPrompt(language: string, includeGitmoji: boolean): Promise<string> {
+  const template = await getCommitPromptTemplate();
+  const replacements: Record<string, string> = {
+    LANGUAGE: language,
+    OUTPUT_FORMAT: buildOutputFormat(includeGitmoji),
+    TYPE_REFERENCE: buildCommitTypeReferenceTable(includeGitmoji),
+    GITMOJI_RULES: buildGitmojiRules(includeGitmoji),
+    EXAMPLE: buildExample(language, includeGitmoji)
+  };
 
-- Bullet points with "-"
-- Max 72 chars per line
-- Explain what and why
-- Must be in ${language}
-- Use【】for different types
-
-## Critical Requirements
-
-1. Output ONLY the commit message
-2. Write ONLY in ${language}
-3. NO additional text or explanations
-4. NO questions or comments
-5. NO formatting instructions or metadata
-
-## Additional Context
-
-If provided, consider any additional context about the changes when generating the commit message. This context will be provided before the diff and should influence the final commit message while maintaining all other formatting rules.
-
-## Examples
-
-INPUT:
-
-diff --git a/src/server.ts b/src/server.ts\n index ad4db42..f3b18a9 100644\n --- a/src/server.ts\n +++ b/src/server.ts\n @@ -10,7 +10,7 @@\n import {\n initWinstonLogger();
-\n \n const app = express();
-\n -const port = 7799;
-\n +const PORT = 7799;
-\n \n app.use(express.json());
-\n \n @@ -34,6 +34,6 @@\n app.use((\_, res, next) => {\n // ROUTES\n app.use(PROTECTED_ROUTER_URL, protectedRouter);
-\n \n -app.listen(port, () => {\n - console.log(\`Server listening on port \$\{port\}\`);
-\n +app.listen(process.env.PORT || PORT, () => {\n + console.log(\`Server listening on port \$\{PORT\}\`);
-\n });
-
-OUTPUT:
-
-refactor(server): optimize server port configuration
-
-- rename port variable to uppercase (PORT) to follow constant naming convention
-- add environment variable port support for flexible deployment
-
-Remember: All output MUST be in ${language} language. You are to act as a pure commit message generator. Your response should contain NOTHING but the commit message itself.`;
+  return template.replace(/\{\{([A-Z_]+)\}\}/g, (match, key: string) => {
+    return replacements[key] ?? match;
+  });
+}
 
 function getConfiguredPromptPreset(resourceUri?: vscode.Uri): PromptPreset {
   return ConfigurationManager.getInstance().getConfig<PromptPreset>(
@@ -225,7 +126,7 @@ function getCustomSystemPrompt(resourceUri?: vscode.Uri): string | undefined {
   return trimmedPrompt ? trimmedPrompt : undefined;
 }
 
-function resolvePromptContent(language: string, resourceUri?: vscode.Uri): string {
+async function resolvePromptContent(language: string, resourceUri?: vscode.Uri): Promise<string> {
   const customPrompt = getCustomSystemPrompt(resourceUri);
   const promptPreset = getConfiguredPromptPreset(resourceUri);
 
@@ -243,9 +144,7 @@ function resolvePromptContent(language: string, resourceUri?: vscode.Uri): strin
     return customPrompt;
   }
 
-  return promptPreset === 'without-gitmoji'
-    ? WITHOUT_GITMOJI_PROMPT(language)
-    : WITH_GITMOJI_PROMPT(language);
+  return buildCommitPrompt(language, promptPreset === 'with-gitmoji');
 }
 
 /**
@@ -264,7 +163,7 @@ export const getMainCommitPrompt = async (resourceUri?: vscode.Uri) => {
   return [
     {
       role: 'system',
-      content: resolvePromptContent(language, resourceUri)
+      content: await resolvePromptContent(language, resourceUri)
     }
   ];
 };

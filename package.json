@@ -2,7 +2,7 @@
   "name": "ai-commit-plus",
   "displayName": "AI Commit Plus",
   "description": "Use OpenAI and Gemini APIs to review Git changes, generate conventional commit messages, and keep commit conventions consistent with the AI Commit Plus workflow.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "engines": {
     "node": ">=24",
     "vscode": "^1.77.0"
@@ -144,18 +144,38 @@
           "items": {
             "type": "object",
             "properties": {
-              "id": { "type": "string" },
-              "name": { "type": "string" },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
               "type": {
                 "type": "string",
-                "enum": ["openai-compatible", "gemini"]
+                "enum": [
+                  "openai-compatible",
+                  "gemini"
+                ]
               },
-              "baseURL": { "type": "string" },
-              "model": { "type": "string" },
-              "temperature": { "type": "number" },
-              "azureApiVersion": { "type": "string" }
+              "baseURL": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "temperature": {
+                "type": "number"
+              },
+              "azureApiVersion": {
+                "type": "string"
+              }
             },
-            "required": ["id", "name", "type", "model"]
+            "required": [
+              "id",
+              "name",
+              "type",
+              "model"
+            ]
           }
         },
         "ai-commit-plus.ACTIVE_PROVIDER_PROFILE_ID": {
@@ -210,6 +230,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
     "fs-extra": "^11.0.4",
+    "gitmojis": "^3.15.0",
     "openai": "^4.14.2",
     "simple-git": "^3.17.0"
   },
