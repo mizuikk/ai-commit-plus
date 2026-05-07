@@ -1,7 +1,7 @@
 on:
-  push:
-    tags:
-      - '*'
+  # Marketplace publishing is intentionally manual. The project currently
+  # distributes VSIX packages through GitHub Releases instead.
+  workflow_dispatch:
 
 name: Publish AI Commit Plus to Visual Studio Marketplace
 jobs:

@@ -24,7 +24,7 @@
     "Auto Commit"
   ],
   "publisher": "mizuikk",
-  "repository": "https://github.com/mizuikk/ai-commit",
+  "repository": "https://github.com/mizuikk/ai-commit-plus",
   "icon": "images/logo.png",
   "activationEvents": [
     "onCommand:extension.ai-commit-plus",

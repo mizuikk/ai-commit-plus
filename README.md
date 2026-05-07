@@ -6,9 +6,7 @@
 
 <h1>AI Commit Plus</h1>
 
-Use OpenAI / Azure OpenAI / DeepSeek / Gemini APIs to review staged Git changes, generate conventional commit messages, and keep commit conventions consistent across repositories.
-
-> This project is a fork of [Sitoi/ai-commit](https://github.com/Sitoi/ai-commit), with independent branding, release workflow, and repository-level language override improvements.
+Generate Conventional Commit messages from staged Git diffs with OpenAI-compatible and Gemini APIs, right inside VS Code.
 
 **English** · [简体中文](./README.zh_CN.md) · [Report Bug][github-issues-link] · [Request Feature][github-issues-link]
 
@@ -23,85 +21,100 @@ Use OpenAI / Azure OpenAI / DeepSeek / Gemini APIs to review staged Git changes,
 
 </div>
 
-## Features
+## Highlights
 
-- Generate commit messages from staged diffs with OpenAI / Azure OpenAI / DeepSeek / Gemini.
-- Support multi-language commit messages.
-- Support repository-level language overrides for multi-project workflows.
-- Support switchable Gitmoji / non-Gitmoji prompt presets.
-- Support custom system prompts.
-- Support Conventional Commits.
+- **AI-powered commit messages** - send staged diffs to OpenAI, Azure OpenAI, DeepSeek, or Gemini and get back a ready-to-use Conventional Commit message.
+- **Gitmoji or plain Conventional Commits** - switch between emoji-prefixed and plain formats with one click.
+- **19 languages** - generate commit subjects and bodies in English, Chinese, Japanese, Korean, French, and more.
+- **Per-repository overrides** - set a different language, prompt preset, or provider profile for individual repositories.
+- **Provider Profiles** - save multiple API configurations and switch between them without editing settings by hand.
+- **Secure API keys** - keys are stored in VS Code SecretStorage, never in settings.json.
+- **Extra context from the SCM input** - type a hint in the Source Control message box before generating, and the AI will incorporate it.
 
 ## Installation
 
-1. Download the latest `.vsix` asset from [GitHub Releases][github-release-link].
-2. In VS Code, run `Extensions: Install from VSIX...`.
-3. Select the downloaded `ai-commit-plus-<version>.vsix` package.
+AI Commit Plus is currently distributed as a VSIX package through GitHub Releases. It is not published to the Visual Studio Marketplace.
 
-> **Note**\
-> Use Node.js `24.14.1` or later for local development and packaging.
+1. Download the latest `.vsix` from [GitHub Releases][github-release-link].
+2. Run `Extensions: Install from VSIX...` from the Command Palette.
+3. Select the downloaded `ai-commit-plus-<version>.vsix`.
 
-## Usage
+> Requires Node.js `24.14.1` or later for local development and packaging.
 
-1. Install and enable `AI Commit Plus`.
-2. In VS Code settings, configure the `ai-commit-plus` settings namespace, or use `Manage Provider Profiles` to store multiple provider profiles and switch between them.
-3. Stage the changes you want to include in the commit.
-4. Optional: enter extra context in the Source Control message box before generating the commit message.
-5. Click the `AI Commit Plus` action in the Source Control title area.
-6. Review the generated message and commit if it looks correct.
+## Quick Start
 
-If you switch between repositories that require different commit languages, press `Ctrl+Shift+P` to open the Command Palette (`Cmd+Shift+P` on macOS), then run `Set Commit Language for Current Repository`. It stores a workspace or folder override only for the active repository.
+1. Install the `.vsix` package from GitHub Releases and enable `AI Commit Plus`.
+2. Run `Manage Provider Profiles` from the Command Palette (`Ctrl+Shift+P`).
+3. Create a profile: pick a provider type (OpenAI-compatible or Gemini), enter a name, model, and API key.
+4. Stage the files you want to commit.
+5. (Optional) Type extra context in the Source Control message box.
+6. Click the **AI Commit Plus** button in the Source Control title area.
+7. Review the generated message and commit.
 
-If you want to switch between emoji and non-emoji commit formats per repository, run `Set Prompt Preset for Current Repository` from the Command Palette. It stores a workspace or folder override only for the active repository.
+The status bar shows the current provider, language, and prompt preset. Click it to change any of them on the fly.
 
-> **Note**\
-> This command saves the language choice as a VS Code workspace or folder setting. In a single-folder repository, it will usually write to `.vscode/settings.json`; if that file is tracked by Git, you may see it in your changes list.
+## Provider Profiles
 
-> **Note**\
-> If your diff is too large for the configured model context window, stage and generate the commit in smaller batches.
+Profiles let you save and switch between multiple AI provider configurations. Each profile stores the provider type, display name, base URL, model, temperature, and Azure API version, while the API key is kept in VS Code SecretStorage.
+
+| Command | Description |
+| :--- | :--- |
+| `Manage Provider Profiles` | Create, edit, copy, delete, or activate profiles |
+| `Switch Provider Profile` | Quick shortcut to the profile switcher |
+
+Supported provider types:
+
+- **OpenAI-compatible** - OpenAI, Azure OpenAI, DeepSeek, and any API that speaks the OpenAI chat-completions protocol.
+- **Gemini** - Google Gemini models.
+
+## Commands
+
+| Command | Description |
+| :--- | :--- |
+| `AI Commit Plus` | Generate a commit message from staged changes (available in the SCM title bar) |
+| `Manage Provider Profiles` | Add, edit, copy, or delete provider profiles |
+| `Switch Provider Profile` | Change the active provider profile |
+| `Show Available OpenAI Models` | Browse and pick a model from an OpenAI-compatible endpoint |
+| `Set Commit Language for Current Repository` | Override the commit language for the current repository |
+| `Set Prompt Preset for Current Repository` | Override the prompt preset (Gitmoji / plain / custom) for the current repository |
 
 ## Configuration
 
-> **Note**\
-> Since `0.0.5`, `EMOJI_ENABLED` and `FULL_GITMOJI_SPEC` are no longer required. The default preset is `with-gitmoji`. To disable emojis, switch `PROMPT_PRESET` to `without-gitmoji`. To fully customize behavior, set `PROMPT_PRESET` to `custom` and provide `AI_COMMIT_SYSTEM_PROMPT`.
+All settings live under the `ai-commit-plus.` prefix.
 
-All settings live under the `ai-commit-plus.` prefix in VS Code:
+| Setting | Type | Default | Notes |
+| :--- | :---: | :---: | :--- |
+| `PROVIDER_PROFILES` | array | `[]` | Saved provider profiles; API keys are stored in SecretStorage |
+| `ACTIVE_PROVIDER_PROFILE_ID` | string | `""` | Active profile ID; can be overridden per workspace or folder |
+| `AI_COMMIT_LANGUAGE` | string | `English` | Commit message language (19 options); supports per-repo overrides |
+| `PROMPT_PRESET` | string | `with-gitmoji` | `with-gitmoji`, `without-gitmoji`, or `custom`; supports per-repo overrides |
+| `AI_COMMIT_SYSTEM_PROMPT` | string | `""` | Custom system prompt used when `PROMPT_PRESET` is `custom` |
 
-| Setting | Type | Default | Required | Notes |
-| :--- | :---: | :---: | :---: | :--- |
-| `PROVIDER_PROFILES` | array | `[]` | No | Stores multiple provider profiles. API keys are saved in VS Code SecretStorage |
-| `ACTIVE_PROVIDER_PROFILE_ID` | string | None | No | Active profile id, can be overridden per workspace or repository |
-| `AI_COMMIT_LANGUAGE` | string | `English` | Yes | Supports 19 languages and repository-level overrides |
-| `PROMPT_PRESET` | string | `with-gitmoji` | No | Prompt preset: `with-gitmoji`, `without-gitmoji`, or `custom`; supports repository-level overrides |
-| `AI_COMMIT_SYSTEM_PROMPT` | string | None | No | Custom system prompt used when `PROMPT_PRESET=custom`; supports repository-level overrides |
+## Repository-Level Overrides
 
-### Provider profile workflow
+You can override the commit language, prompt preset, and active provider profile for individual repositories. Overrides are stored as VS Code workspace or folder settings (typically in `.vscode/settings.json`).
 
-Use `Manage Provider Profiles` to create, edit, delete, or activate profiles. Each profile stores:
+Run these commands from the Command Palette when the target repository is open:
 
-- provider type
-- display name
-- base URL
-- model
-- temperature
-- Azure API version
-- API key in SecretStorage
+- `Set Commit Language for Current Repository`
+- `Set Prompt Preset for Current Repository`
+- `Manage Provider Profiles` -> pick a profile -> **Set for current workspace**
+
+> If `.vscode/settings.json` is tracked by Git, the override will appear as a local change.
 
 ## Local Development
 
-You can develop online with GitHub Codespaces:
-
-[![][github-codespace-shield]][github-codespace-link]
-
-Or clone the repository locally:
-
 ```bash
-git clone https://github.com/mizuikk/ai-commit.git
-cd ai-commit
+git clone https://github.com/mizuikk/ai-commit-plus.git
+cd ai-commit-plus
 npm install
 ```
 
 Open the project in VS Code and press `F5` to launch an Extension Development Host.
+
+You can also develop with GitHub Codespaces:
+
+[![][github-codespace-shield]][github-codespace-link]
 
 ## Contributing
 
@@ -113,6 +126,10 @@ Issues and pull requests are welcome. Use [GitHub Issues][github-issues-link] fo
 
 [![][github-contrib-shield]][github-contrib-link]
 
+## Project History
+
+AI Commit Plus began as a fork of [Sitoi/ai-commit](https://github.com/Sitoi/ai-commit) and has since evolved with independent branding, Provider Profiles, per-repository overrides, Gemini support, and a combined status bar.
+
 ## Credits
 
 - **auto-commit** - <https://github.com/lynxife/auto-commit>
@@ -120,23 +137,23 @@ Issues and pull requests are welcome. Use [GitHub Issues][github-issues-link] fo
 
 ## License
 
-This project is [MIT](./LICENSE) licensed.
+This project is [MIT](./license) licensed.
 
-[github-codespace-link]: https://codespaces.new/mizuikk/ai-commit
-[github-codespace-shield]: https://github.com/mizuikk/ai-commit/blob/main/images/codespaces.png?raw=true
-[github-contributors-link]: https://github.com/mizuikk/ai-commit/graphs/contributors
-[github-contributors-shield]: https://img.shields.io/github/contributors/mizuikk/ai-commit?color=c4f042&labelColor=black&style=flat-square
-[github-downloads-link]: https://github.com/mizuikk/ai-commit/releases
-[github-downloads-shield]: https://img.shields.io/github/downloads/mizuikk/ai-commit/total?label=downloads&labelColor=black&style=flat-square
-[github-issues-link]: https://github.com/mizuikk/ai-commit/issues
-[github-issues-shield]: https://img.shields.io/github/issues/mizuikk/ai-commit?color=ff80eb&labelColor=black&style=flat-square
-[github-license-link]: https://github.com/mizuikk/ai-commit/blob/main/LICENSE
-[github-license-shield]: https://img.shields.io/github/license/mizuikk/ai-commit?color=white&labelColor=black&style=flat-square
-[github-release-link]: https://github.com/mizuikk/ai-commit/releases
-[github-release-shield]: https://img.shields.io/github/v/release/mizuikk/ai-commit?display_name=tag&label=release&color=blue&labelColor=black&style=flat-square
-[github-stars-link]: https://github.com/mizuikk/ai-commit/stargazers
-[github-stars-shield]: https://img.shields.io/github/stars/mizuikk/ai-commit?color=ffcb47&labelColor=black&style=flat-square
-[pr-welcome-link]: https://github.com/mizuikk/ai-commit/pulls
+[github-codespace-link]: https://codespaces.new/mizuikk/ai-commit-plus
+[github-codespace-shield]: https://github.com/mizuikk/ai-commit-plus/blob/main/images/codespaces.png?raw=true
+[github-contributors-link]: https://github.com/mizuikk/ai-commit-plus/graphs/contributors
+[github-contributors-shield]: https://img.shields.io/github/contributors/mizuikk/ai-commit-plus?color=c4f042&labelColor=black&style=flat-square
+[github-downloads-link]: https://github.com/mizuikk/ai-commit-plus/releases
+[github-downloads-shield]: https://img.shields.io/github/downloads/mizuikk/ai-commit-plus/total?label=downloads&labelColor=black&style=flat-square
+[github-issues-link]: https://github.com/mizuikk/ai-commit-plus/issues
+[github-issues-shield]: https://img.shields.io/github/issues/mizuikk/ai-commit-plus?color=ff80eb&labelColor=black&style=flat-square
+[github-license-link]: https://github.com/mizuikk/ai-commit-plus/blob/main/license
+[github-license-shield]: https://img.shields.io/github/license/mizuikk/ai-commit-plus?color=white&labelColor=black&style=flat-square
+[github-release-link]: https://github.com/mizuikk/ai-commit-plus/releases
+[github-release-shield]: https://img.shields.io/github/v/release/mizuikk/ai-commit-plus?display_name=tag&label=release&color=blue&labelColor=black&style=flat-square
+[github-stars-link]: https://github.com/mizuikk/ai-commit-plus/stargazers
+[github-stars-shield]: https://img.shields.io/github/stars/mizuikk/ai-commit-plus?color=ffcb47&labelColor=black&style=flat-square
+[pr-welcome-link]: https://github.com/mizuikk/ai-commit-plus/pulls
 [pr-welcome-shield]: https://img.shields.io/badge/PRs-welcome-ffcb47?labelColor=black&style=for-the-badge
-[github-contrib-link]: https://github.com/mizuikk/ai-commit/graphs/contributors
-[github-contrib-shield]: https://contrib.rocks/image?repo=mizuikk%2Fai-commit
+[github-contrib-link]: https://github.com/mizuikk/ai-commit-plus/graphs/contributors
+[github-contrib-shield]: https://contrib.rocks/image?repo=mizuikk%2Fai-commit-plus
