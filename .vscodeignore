@@ -1,11 +1,16 @@
+artifacts/**
 .vscode/**
 .vscode-test/**
 tmp/**
 src/**
+out/**
+node_modules/**
 .gitignore
 .yarnrc
+.yarn/**
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/.eslintrc.json
 **/*.map
 **/*.ts
+**.tgz
