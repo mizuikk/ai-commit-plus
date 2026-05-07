@@ -1,29 +1,8 @@
 import OpenAI from 'openai';
-import { ChatCompletionMessageParam } from 'openai/resources';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import * as vscode from 'vscode';
-import { ConfigurationManager, ProviderProfile, ResolvedProviderProfile } from './config';
-
-function createOpenAIClient(profile: ProviderProfile, apiKey: string): OpenAI {
-  const config: {
-    apiKey: string;
-    baseURL?: string;
-    defaultQuery?: { 'api-version': string };
-    defaultHeaders?: { 'api-key': string };
-  } = {
-    apiKey
-  };
-
-  if (profile.baseURL) {
-    config.baseURL = profile.baseURL;
-  }
-
-  if (profile.azureApiVersion) {
-    config.defaultQuery = { 'api-version': profile.azureApiVersion };
-    config.defaultHeaders = { 'api-key': apiKey };
-  }
-
-  return new OpenAI(config);
-}
+import { ConfigurationManager, ResolvedProviderProfile } from './config';
+import { createOpenAIClient } from './api-utils';
 
 export async function resolveOpenAIProfile(resourceUri?: vscode.Uri): Promise<ResolvedProviderProfile> {
   const configManager = ConfigurationManager.getInstance();

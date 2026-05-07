@@ -78,7 +78,7 @@ interface ProviderProfileForm {
   apiKey: string;
 }
 
-function validateTemperatureInput(value: string): string | undefined {
+export function validateTemperatureInput(value: string): string | undefined {
   const trimmed = value.trim();
   if (!trimmed) {
     return 'Temperature is required.';
@@ -466,7 +466,7 @@ async function setCommitLanguageForCurrentRepository(arg?: any): Promise<void> {
       languageState.target,
       resourceUri
     );
-    await vscode.commands.executeCommand('ai-commit-plus.refreshLanguageStatusBar');
+    await vscode.commands.executeCommand('ai-commit-plus.refreshStatusBar');
     vscode.window.showInformationMessage(
       `AI Commit Plus language for this repository now follows the inherited setting: ${languageState.inheritedLanguage}.`
     );
@@ -483,7 +483,7 @@ async function setCommitLanguageForCurrentRepository(arg?: any): Promise<void> {
     languageState.target,
     resourceUri
   );
-  await vscode.commands.executeCommand('ai-commit-plus.refreshLanguageStatusBar');
+  await vscode.commands.executeCommand('ai-commit-plus.refreshStatusBar');
 
   vscode.window.showInformationMessage(
     `AI Commit Plus language for this repository set to ${selection.language}.`
@@ -517,7 +517,7 @@ async function setPromptPresetForCurrentRepository(arg?: any): Promise<void> {
       promptPresetState.target,
       resourceUri
     );
-    await vscode.commands.executeCommand('ai-commit-plus.refreshPromptPresetStatusBar');
+    await vscode.commands.executeCommand('ai-commit-plus.refreshStatusBar');
     vscode.window.showInformationMessage(
       `AI Commit Plus prompt preset for this repository now follows the inherited setting: ${getPromptPresetLabel(
         promptPresetState.inheritedPromptPreset
@@ -536,7 +536,7 @@ async function setPromptPresetForCurrentRepository(arg?: any): Promise<void> {
     promptPresetState.target,
     resourceUri
   );
-  await vscode.commands.executeCommand('ai-commit-plus.refreshPromptPresetStatusBar');
+  await vscode.commands.executeCommand('ai-commit-plus.refreshStatusBar');
 
   vscode.window.showInformationMessage(
     `AI Commit Plus prompt preset for this repository set to ${selection.label}.`
@@ -563,7 +563,7 @@ async function createProviderProfile(): Promise<void> {
   );
 
   await configManager.setActiveProviderProfileId(profile.id, vscode.ConfigurationTarget.Global);
-  await vscode.commands.executeCommand('ai-commit-plus.refreshProviderStatusBar');
+  await vscode.commands.executeCommand('ai-commit-plus.refreshStatusBar');
   vscode.window.showInformationMessage(`Provider profile "${profile.name}" created.`);
 }
 
@@ -594,7 +594,7 @@ async function editProviderProfile(profile: ProviderProfile): Promise<void> {
   );
 
   vscode.window.showInformationMessage(`Provider profile "${updatedProfile.name}" updated.`);
-  await vscode.commands.executeCommand('ai-commit-plus.refreshProviderStatusBar');
+  await vscode.commands.executeCommand('ai-commit-plus.refreshStatusBar');
 }
 
 async function copyProviderProfile(profile: ProviderProfile): Promise<void> {
@@ -626,7 +626,7 @@ async function copyProviderProfile(profile: ProviderProfile): Promise<void> {
     copiedProfile.id,
     vscode.ConfigurationTarget.Global
   );
-  await vscode.commands.executeCommand('ai-commit-plus.refreshProviderStatusBar');
+  await vscode.commands.executeCommand('ai-commit-plus.refreshStatusBar');
   vscode.window.showInformationMessage(`Provider profile "${copiedProfile.name}" copied.`);
 }
 
@@ -641,7 +641,7 @@ async function deleteProviderProfile(profile: ProviderProfile): Promise<void> {
 
   if (confirmed === 'Delete') {
     await configManager.deleteProviderProfile(profile.id);
-    await vscode.commands.executeCommand('ai-commit-plus.refreshProviderStatusBar');
+    await vscode.commands.executeCommand('ai-commit-plus.refreshStatusBar');
     vscode.window.showInformationMessage(`Provider profile "${profile.name}" deleted.`);
   }
 }
@@ -656,7 +656,7 @@ async function activateProviderProfile(
     : vscode.ConfigurationTarget.Global;
 
   await configManager.setActiveProviderProfileId(profile.id, target, resourceUri);
-  await vscode.commands.executeCommand('ai-commit-plus.refreshProviderStatusBar');
+  await vscode.commands.executeCommand('ai-commit-plus.refreshStatusBar');
   vscode.window.showInformationMessage(`Active provider profile set to "${profile.name}".`);
 }
 
@@ -669,7 +669,7 @@ async function setProviderProfileForCurrentWorkspace(
   const target = getConfigurationTargetForResource(targetUri);
 
   await configManager.setActiveProviderProfileId(profile.id, target, targetUri);
-  await vscode.commands.executeCommand('ai-commit-plus.refreshProviderStatusBar');
+  await vscode.commands.executeCommand('ai-commit-plus.refreshStatusBar');
   vscode.window.showInformationMessage(
     `Repository profile set to "${profile.name}" for ${targetUri.fsPath}.`
   );
@@ -818,7 +818,7 @@ export class CommandManager {
         await handler(...args);
       } catch (error) {
         const result = await vscode.window.showErrorMessage(
-          `Failed: ${error.message}`,
+          `Failed: ${error instanceof Error ? error.message : String(error)}`,
           'Retry',
           'Configure'
         );

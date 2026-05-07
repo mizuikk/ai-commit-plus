@@ -132,9 +132,7 @@ function createCombinedStatusBarItem(
   void refresh();
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('ai-commit-plus.refreshProviderStatusBar', refresh),
-    vscode.commands.registerCommand('ai-commit-plus.refreshLanguageStatusBar', refresh),
-    vscode.commands.registerCommand('ai-commit-plus.refreshPromptPresetStatusBar', refresh),
+    vscode.commands.registerCommand('ai-commit-plus.refreshStatusBar', refresh),
     vscode.commands.registerCommand('ai-commit-plus.openStatusBarMenu', openMenu),
     vscode.window.onDidChangeActiveTextEditor(() => {
       void refresh();

@@ -1,7 +1,7 @@
 import * as fs from 'fs-extra';
 import * as vscode from 'vscode';
 import { ConfigKeys, ConfigurationManager } from './config';
-import { getDiffStaged } from './git-utils';
+import { getDiffStaged, GitExtensionRepository } from './git-utils';
 import { ChatGPTAPI } from './openai-utils';
 import { getMainCommitPrompt } from './prompts';
 import { ProgressHandler } from './utils';
@@ -37,13 +37,17 @@ const generateCommitMessageChatCompletionPrompt = async (
   return chatContextAsCompletionRequest;
 };
 
+interface GenerateCommitMsgArg {
+  rootUri?: vscode.Uri;
+}
+
 /**
  * Retrieves the repository associated with the provided argument.
  *
- * @param {any} arg - The input argument containing the root URI of the repository.
- * @returns {Promise<vscode.SourceControlRepository>} - A promise that resolves to the repository object.
+ * @param {GenerateCommitMsgArg} arg - The input argument containing the root URI of the repository.
+ * @returns {Promise<GitExtensionRepository>} - A promise that resolves to the repository object.
  */
-export async function getRepo(arg) {
+export async function getRepo(arg?: GenerateCommitMsgArg): Promise<GitExtensionRepository> {
   const gitApi = vscode.extensions.getExtension('vscode.git')?.exports.getAPI(1);
   if (!gitApi) {
     throw new Error('Git extension not found');
@@ -65,10 +69,10 @@ export async function getRepo(arg) {
 /**
  * Generates a commit message based on the changes staged in the repository.
  *
- * @param {any} arg - The input argument containing the root URI of the repository.
+ * @param {GenerateCommitMsgArg} arg - The input argument containing the root URI of the repository.
  * @returns {Promise<void>} - A promise that resolves when the commit message has been generated and set in the SCM input box.
  */
-export async function generateCommitMsg(arg) {
+export async function generateCommitMsg(arg?: GenerateCommitMsgArg) {
   return ProgressHandler.withProgress('', async (progress) => {
     try {
       const configManager = ConfigurationManager.getInstance();
@@ -76,11 +80,7 @@ export async function generateCommitMsg(arg) {
       const resolvedProfile = await configManager.getActiveProviderProfile(repo.rootUri);
 
       progress.report({ message: 'Getting staged changes...' });
-      const { diff, error } = await getDiffStaged(repo);
-
-      if (error) {
-        throw new Error(`Failed to get staged changes: ${error}`);
-      }
+      const diff = await getDiffStaged(repo);
 
       if (!diff || diff === 'No changes staged.') {
         throw new Error('No changes staged for commit');
@@ -115,7 +115,7 @@ export async function generateCommitMsg(arg) {
         if (resolvedProfile.profile.type === 'gemini') {
           commitMessage = await GeminiAPI(messages as any[], repo.rootUri);
         } else {
-          commitMessage = await ChatGPTAPI(messages as any[], repo.rootUri);
+          commitMessage = (await ChatGPTAPI(messages as any[], repo.rootUri)) ?? undefined;
         }
 
 
@@ -127,8 +127,9 @@ export async function generateCommitMsg(arg) {
       } catch (err) {
         let errorMessage = 'An unexpected error occurred';
 
-        if (resolvedProfile.profile.type === 'openai-compatible' && err.response?.status) {
-          switch (err.response.status) {
+        const e = err as { response?: { status?: number } } | undefined;
+        if (resolvedProfile.profile.type === 'openai-compatible' && e?.response?.status) {
+          switch (e.response.status) {
             case 401:
               errorMessage = 'Invalid OpenAI API key or unauthorized access';
               break;
@@ -142,8 +143,6 @@ export async function generateCommitMsg(arg) {
               errorMessage = 'OpenAI service is temporarily unavailable';
               break;
           }
-        } else if (resolvedProfile.profile.type === 'gemini') {
-          errorMessage = `Gemini API error: ${err.message}`;
         }
 
         throw new Error(errorMessage);

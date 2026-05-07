@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ChatCompletionMessageParam } from 'openai/resources';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import * as vscode from 'vscode';
 import { ConfigurationManager } from './config';
 
@@ -44,17 +44,40 @@ export async function GeminiAPI(
     const { profile } = await getGeminiProfile(resourceUri);
     const temperature = profile.temperature ?? 0.7;
 
-    const model = gemini.getGenerativeModel({ model: profile.model });
+    const systemMessages = messages.filter(m => m.role === 'system');
+    const nonSystemMessages = messages.filter(m => m.role !== 'system');
+
+    const model = gemini.getGenerativeModel({
+      model: profile.model,
+      systemInstruction: systemMessages.map(m => extractMessageContent(m)).join('\n'),
+    });
+
     const chat = model.startChat({
       generationConfig: {
         temperature
       }
     });
 
-    const result = await chat.sendMessage(messages.map(extractMessageContent).join('\n'));
+    const userContent = nonSystemMessages.map(m => extractMessageContent(m)).join('\n\n');
+    const result = await chat.sendMessage(userContent);
     return result.response.text();
   } catch (error) {
-    console.error('Gemini API call failed:', error);
+    if (error instanceof Error) {
+      const msg = error.message;
+
+      if (msg.includes('API_KEY_INVALID') || msg.includes('403')) {
+        throw new Error('Invalid Gemini API key');
+      }
+      if (msg.includes('RESOURCE_EXHAUSTED') || msg.includes('429')) {
+        throw new Error('Gemini rate limit exceeded. Please try again later');
+      }
+      if (msg.includes('SAFETY') || msg.includes('blocked')) {
+        throw new Error('Response blocked by Gemini safety filters');
+      }
+      if (msg.includes('UNAVAILABLE') || msg.includes('503') || msg.includes('500')) {
+        throw new Error('Gemini service is temporarily unavailable');
+      }
+    }
     throw error;
   }
 }

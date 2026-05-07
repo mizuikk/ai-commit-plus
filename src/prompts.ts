@@ -19,7 +19,7 @@ async function getCommitPromptTemplate(): Promise<string> {
   return commitPromptTemplateCache;
 }
 
-function buildOutputFormat(includeGitmoji: boolean): string {
+export function buildOutputFormat(includeGitmoji: boolean): string {
   if (includeGitmoji) {
     return `### Single Type Changes
 
@@ -59,7 +59,7 @@ function buildOutputFormat(includeGitmoji: boolean): string {
 \`\`\``;
 }
 
-function buildGitmojiRules(includeGitmoji: boolean): string {
+export function buildGitmojiRules(includeGitmoji: boolean): string {
   return includeGitmoji
     ? `### Gitmoji
 
@@ -69,7 +69,7 @@ function buildGitmojiRules(includeGitmoji: boolean): string {
     : '';
 }
 
-function buildExample(language: string, includeGitmoji: boolean): string {
+export function buildExample(language: string, includeGitmoji: boolean): string {
   const exampleHeader = includeGitmoji
     ? `${getGitmojiForCommitType('refactor')} refactor(server): <subject in ${language}>`
     : `refactor(server): <subject in ${language}>`;
@@ -82,7 +82,7 @@ ${exampleHeader}
 \`\`\``;
 }
 
-async function buildCommitPrompt(language: string, includeGitmoji: boolean): Promise<string> {
+export async function buildCommitPrompt(language: string, includeGitmoji: boolean): Promise<string> {
   const template = await getCommitPromptTemplate();
   const replacements: Record<string, string> = {
     LANGUAGE: language,

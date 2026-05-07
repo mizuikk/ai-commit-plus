@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import OpenAI from 'openai';
 import * as vscode from 'vscode';
+import { createOpenAIClient } from './api-utils';
 
 export type ProviderProfileType = 'openai-compatible' | 'gemini';
 export type PromptPreset = 'with-gitmoji' | 'without-gitmoji' | 'custom';
@@ -32,7 +33,7 @@ export enum ConfigKeys {
   ACTIVE_PROVIDER_PROFILE_ID = 'ACTIVE_PROVIDER_PROFILE_ID',
 }
 
-function normalizeString(value: unknown): string | undefined {
+export function normalizeString(value: unknown): string | undefined {
   if (typeof value !== 'string') {
     return undefined;
   }
@@ -41,7 +42,7 @@ function normalizeString(value: unknown): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
-function createProviderProfileId(): string {
+export function createProviderProfileId(): string {
   return `profile-${randomUUID()}`;
 }
 
@@ -52,7 +53,7 @@ function getProfileApiKeyStorageKey(profileId: string): string {
 export function getConfigurationTargetForResource(
   resourceUri?: vscode.Uri
 ): vscode.ConfigurationTarget {
-  return vscode.workspace.getWorkspaceFolder(resourceUri)
+  return resourceUri && vscode.workspace.getWorkspaceFolder(resourceUri)
     ? vscode.ConfigurationTarget.WorkspaceFolder
     : vscode.workspace.workspaceFile || vscode.workspace.workspaceFolders?.length
       ? vscode.ConfigurationTarget.Workspace
@@ -111,7 +112,7 @@ export class ConfigurationManager {
       const config = resourceUri
         ? vscode.workspace.getConfiguration(AI_COMMIT_NAMESPACE, resourceUri)
         : vscode.workspace.getConfiguration(AI_COMMIT_NAMESPACE);
-      this.configCache.set(cacheKey, config.get<T>(key, defaultValue));
+      this.configCache.set(cacheKey, config.get<T>(key, defaultValue!));
     }
     return this.configCache.get(cacheKey);
   }
@@ -313,7 +314,7 @@ export class ConfigurationManager {
         return;
       }
 
-      const openai = this.createOpenAIClient(activeProfile, apiKey);
+      const openai = createOpenAIClient(activeProfile, apiKey);
       const models = await openai.models.list();
       const availableModels = models.data.map((model) => model.id);
       const cacheKey = `${AVAILABLE_OPENAI_MODELS_KEY}:${activeProfile.id}`;
@@ -335,27 +336,5 @@ export class ConfigurationManager {
     } catch (error) {
       console.error('Failed to fetch OpenAI models:', error);
     }
-  }
-
-  private createOpenAIClient(profile: ProviderProfile, apiKey: string): OpenAI {
-    const config: {
-      apiKey: string;
-      baseURL?: string;
-      defaultQuery?: { 'api-version': string };
-      defaultHeaders?: { 'api-key': string };
-    } = {
-      apiKey
-    };
-
-    if (profile.baseURL) {
-      config.baseURL = profile.baseURL;
-    }
-
-    if (profile.azureApiVersion) {
-      config.defaultQuery = { 'api-version': profile.azureApiVersion };
-      config.defaultHeaders = { 'api-key': apiKey };
-    }
-
-    return new OpenAI(config);
   }
 }
